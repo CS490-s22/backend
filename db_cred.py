@@ -1,0 +1,1 @@
+db = {"mysql_host": "sql1.njit.edu", "mysql_user": "ps852", "mysql_pass": "Thereisn0waythat1hitme!", "mysql_db": "ps852"}
