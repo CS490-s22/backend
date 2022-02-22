@@ -13,6 +13,10 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 mysql = MySQL(app)
 
+
+@app.route('/', methods=['GET'])
+def start_app():
+    return "Hello"
 # User Login
 @app.route('/validate_login', methods=['GET', 'POST'])
 def validate_login():
