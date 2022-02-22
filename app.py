@@ -40,7 +40,7 @@ def validate_login():
 # Teacher Functinalities
 
 # Add Question to Question Bank
-@app.route('/new_question', method=['POST'])
+@app.route('/new_question', methods=['POST'])
 def insert_new_question():
     cur = mysql.connection.cursor()
     content_type = request.headers.get('Content-Type')
