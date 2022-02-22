@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 from flask_mysqldb import MySQL
 from db_cred import db #creds
 from hashlib import sha1
+import logging
 
 app = Flask(__name__)
 
