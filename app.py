@@ -35,7 +35,7 @@ def validate_login():
         else:
             return jsonify(error='Invalid Credentials')
     else:
-        return jsonify(error = "Content-Type not supported | Request must in JSON format")
+        return jsonify(error = "Content-Type not supported | Request must be in JSON format")
     
 
 # Teacher Functinalities
