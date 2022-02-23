@@ -25,7 +25,7 @@ def validate_login():
     content_type = request.headers.get('Content-Type')
     if(content_type == 'application/json'):
         req = request.json
-        username = req['user']
+        username = req['username']
         password = sha1(req['password'].encode('utf-8')).hexdigest()
         rows = cur.execute("SELECT username, role FROM users WHERE username = '{0}' AND password = '{1}'".format(username, password))
         
