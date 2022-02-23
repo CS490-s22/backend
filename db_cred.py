@@ -1,1 +1,1 @@
-db = {"mysql_host": "sql2.njit.edu", "mysql_user": "ps852", "mysql_pass": "Thereisn0waythat1hitme!", "mysql_db": "ps852"}
+db = {"mysql_host": "testingdb.c4nmgczzsvxi.us-east-1.rds.amazonaws.com", "mysql_user": "preet", "mysql_pass": "Prince2001", "mysql_db": "testingdb"}

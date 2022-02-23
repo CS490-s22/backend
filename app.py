@@ -27,7 +27,7 @@ def validate_login():
         req = request.json
         username = req['user']
         password = sha1(req['password'].encode('utf-8')).hexdigest()
-        rows = cur.execute("SELECT username, role FROM accounts WHERE username = '{0}' AND password = '{1}'".format(username, password))
+        rows = cur.execute("SELECT username, role FROM users WHERE username = '{0}' AND password = '{1}'".format(username, password))
         
         if rows > 0:
             result = cur.fetchall()[0]
