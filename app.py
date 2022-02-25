@@ -40,20 +40,20 @@ def validate_login():
 
 # Teacher Functinalities
 
-# Add Question to Question Bank
-@app.route('/new_question', methods=['POST'])
-def insert_new_question():
+# Retreive Question Bank or questions based on request method
+@app.route('/question_bank', methods=['GET','POST'])
+def retreive_questions():
     cur = mysql.connection.cursor()
-    content_type = request.headers.get('Content-Type')
-    if(content_type == 'application/json'):
-        req = request.json
-        question = req['title']
-        result = cur.execute("".format(question))
-
-        return jsonify(response="200")
+    if request.method == "GET":
+        rows = cur.execute("SELECT * FROM questions")
+        if rows > 0:
+            result = cur.fetchall()
+            return jsonify(result)
+    elif request.method == "POST":
+        return jsonify(error="POST Request for this endpoint not implemented yet")
     else:
-        return jsonify(error = "Content-Type not supported | Request must in JSON format")
-
+        return jsonify(erorr="Howdidyougethere?")
+    
 
 if __name__ == '__main__':
     gunicorn_logger = logging.getLogger('gunicorn.error')
