@@ -1,5 +1,4 @@
 from flask import Flask, jsonify, request
-from numpy import diff
 from flask_mysqldb import MySQL
 from db_cred import db #creds
 from hashlib import sha1
@@ -92,11 +91,6 @@ def insert_new_question():
     else:
         return jsonify(error="JSON FORMAT REQUIRED")
 
-
-
-
-
-    
 
 
 if __name__ == '__main__':
