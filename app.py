@@ -25,9 +25,9 @@ def start_app():
 def validate_login():
     cur = mysql.connection.cursor()
     content_type = request.headers.get('Content-Type')
-    if request.method is not 'POST':
+    if request.method != 'POST':
         return jsonify(error="REQUIRES POST REQUEST")
-    if content_type is 'application/json':
+    if content_type == 'application/json':
         req = request.json
         username = req['username']
         password = sha1(req['password'].encode('utf-8')).hexdigest()
@@ -48,25 +48,25 @@ def validate_login():
 @app.route('/question_bank', methods=['GET','POST'])
 def retreive_questions():
     cur = mysql.connection.cursor()
-    if request.method is "GET":
+    if request.method == "GET":
         rows = cur.execute("SELECT * FROM questions")
         if rows > 0:
             result = cur.fetchall()
             return jsonify(result)
-    elif request.method is "POST":
+    elif request.method == "POST":
         return jsonify(error="POST Request for this endpoint not implemented yet")
     else:
-        return jsonify(erorr="Howdidyougethere?")
+        return jsonify(error="Howdidyougethere?")
 
 #Insert new question into question bank
-@app.route('new_question', methods=['POST'])
+@app.route('/new_question', methods=['POST'])
 def insert_new_question():
     cur = mysql.connection.cursor()
-    if request.method is not 'POST':
+    if request.method != 'POST':
         return jsonify(error="REQUIRES POST REQUEST")
     
     content_type = request.headers.get("Content-Type")
-    if content_type is 'application\json':
+    if content_type == 'application/json':
         req = request.json
         title = req['title']
         topic = req['topic']
@@ -75,7 +75,7 @@ def insert_new_question():
         madeby = req['creatorid']
         testcases = req['testcases']
 
-        rows_affected = cur.execute("INSERT INTO questions(id, title, topics, question, difficulty, madeby) VALUES(null,'{}','{}','{}''{}','{}')".format(title,topic,question,difficulty,madeby))
+        rows_affected = cur.execute("INSERT INTO questions(id, title, topics, question, difficulty, madeby) VALUES(null,\"{}\",\"{}\",\"{}\",\"{}\",{})".format(title,topic,question,difficulty,madeby))
         mysql.connection.commit()
         logging.warn("ROWS INSERTED INTO QUESTIONS: %d", rows_affected)
 
@@ -85,7 +85,9 @@ def insert_new_question():
         for case in testcases:
             caseI = case['input']
             caseO = case['output']
-            cur.execute("INSERT INTO cases(id, qid, input, output) VALUES(null,{},'{}','{}')".format(question_id,caseI,caseO))
+            rows_affected = cur.execute("INSERT INTO testcases(id, qid, input, output) VALUES(null,{},'{}','{}')".format(question_id,caseI,caseO))
+            mysql.connection.commit()
+            logging.warn("ROWS INSERTED INTO TESTCASES: %d", rows_affected)
         
         return jsonify(result="200", questionID = question_id)
     else:
@@ -97,4 +99,4 @@ if __name__ == '__main__':
     gunicorn_logger = logging.getLogger('gunicorn.error')
     app.logger.handlers = gunicorn_logger.handlers
     app.logger.setLevel(gunicorn_logger.level)
-    app.run(host='0.0.0.0')
+    app.run(host="0.0.0.0")
