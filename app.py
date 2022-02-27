@@ -64,7 +64,16 @@ def retreive_questions():
             result = cur.fetchall()
             return jsonify(result)
     elif request.method == "POST":
-        return jsonify(error="POST Request for this endpoint not implemented yet")
+        content_type = request.headers.get('Content-Type')
+        if content_type == "application/json":
+            req = request.json
+            limit = req['limit']
+            rows = cur.execute(f"SELECT id, title, topics AS 'category', question AS description, difficulty, madeby FROM questions LIMIT {limit}")
+            if rows > 0:
+                result = cur.fetchall()
+            return jsonify(result)
+        else:
+            return jsonify(error = "Content-Type not supported | Request must be in JSON format")
     else:
         return jsonify(error="Howdidyougethere?")
 
@@ -83,7 +92,7 @@ def insert_new_question():
         difficulty = req['difficulty']
         question = req['description']
         madeby = req['professorID']
-        testcases = req['testcases']
+        testcases = req['testCases']
 
         rows_affected = cur.execute("INSERT INTO questions(id, title, topics, question, difficulty, madeby) VALUES(null,\"{}\",\"{}\",\"{}\",\"{}\",{})".format(title,topic,question,difficulty,madeby))
         mysql.connection.commit()
