@@ -45,7 +45,7 @@ def validate_login():
                 cur.execute("SELECT id, firstname, lastname FROM professors WHERE username = '{0}' ".format(username)) 
                 res = cur.fetchall()[0]
 
-            return jsonify(role=user_role, lastName=res['lastname'], firstName=res['firstname'], id=res['id'], username='username')
+            return jsonify(role=user_role, lastName=res['lastname'], firstName=res['firstname'], id=res['id'], username=username)
         else:
             return jsonify(error='Invalid Credentials')
     else:
