@@ -36,7 +36,16 @@ def validate_login():
         
         if rows > 0:
             result = cur.fetchall()[0]
-            return jsonify(result)
+            user_role = result['role']
+
+            if user_role == "Student":
+                cur.execute("SELECT id, firstname, lastname FROM students WHERE username = '{0}' ".format(username)) 
+                res = cur.fetchall()[0]
+            elif user_role == "Professor":
+                cur.execute("SELECT id, firstname, lastname FROM professors WHERE username = '{0}' ".format(username)) 
+                res = cur.fetchall()[0]
+
+            return jsonify(role=user_role, lastName=res['lastname'], firstName=res['firstname'], id=res['id'], username='username')
         else:
             return jsonify(error='Invalid Credentials')
     else:
@@ -50,7 +59,7 @@ def validate_login():
 def retreive_questions():
     cur = mysql.connection.cursor()
     if request.method == "GET":
-        rows = cur.execute("SELECT * FROM questions")
+        rows = cur.execute("SELECT id, title, topic AS 'category', question AS description, difficulty, madeby FROM questions")
         if rows > 0:
             result = cur.fetchall()
             return jsonify(result)
@@ -119,5 +128,5 @@ if __name__ == '__main__':
     gunicorn_logger = logging.getLogger('gunicorn.error')
     app.logger.handlers = gunicorn_logger.handlers
     app.logger.setLevel(gunicorn_logger.level)
-    #app.run(host="0.0.0.0")
-    app.run(debug=True)
+    app.run(host="0.0.0.0")
+    #app.run(debug=True)
