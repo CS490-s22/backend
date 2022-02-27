@@ -70,7 +70,7 @@ def insert_new_question():
     if content_type == 'application/json':
         req = request.json
         title = req['title']
-        topic = req['topic']
+        topic = req['category']
         difficulty = req['difficulty']
         question = req['description']
         madeby = req['professorID']
