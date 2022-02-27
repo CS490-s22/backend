@@ -59,7 +59,7 @@ def validate_login():
 def retreive_questions():
     cur = mysql.connection.cursor()
     if request.method == "GET":
-        rows = cur.execute("SELECT id, title, topic AS 'category', question AS description, difficulty, madeby FROM questions")
+        rows = cur.execute("SELECT id, title, topics AS 'category', question AS description, difficulty, madeby FROM questions")
         if rows > 0:
             result = cur.fetchall()
             return jsonify(result)
