@@ -1,3 +1,4 @@
+import json
 from flask import Flask, jsonify, request
 from flask_mysqldb import MySQL
 from db_cred import db #creds
@@ -72,16 +73,16 @@ def insert_new_question():
         topic = req['topic']
         difficulty = req['difficulty']
         question = req['description']
-        madeby = req['creatorid']
+        madeby = req['professorID']
         testcases = req['testcases']
 
         rows_affected = cur.execute("INSERT INTO questions(id, title, topics, question, difficulty, madeby) VALUES(null,\"{}\",\"{}\",\"{}\",\"{}\",{})".format(title,topic,question,difficulty,madeby))
         mysql.connection.commit()
         logging.warn("ROWS INSERTED INTO QUESTIONS: %d", rows_affected)
 
-        rows = cur.execute("SELECT MAX(id) as id FROM questions;")
-        if rows == 1:
-            question_id = cur.fetchall()[0]['id']
+        cur.execute("SELECT MAX(id) as id FROM questions")
+        question_id = cur.fetchall()[0]['id']
+        
         for case in testcases:
             caseI = case['input']
             caseO = case['output']
@@ -89,14 +90,34 @@ def insert_new_question():
             mysql.connection.commit()
             logging.warn("ROWS INSERTED INTO TESTCASES: %d", rows_affected)
         
-        return jsonify(result="200", questionID = question_id)
+        return jsonify(result="OK", questionID = question_id)
     else:
         return jsonify(error="JSON FORMAT REQUIRED")
 
+#Create new exam
+@app.route('/new_exam',methods=['POST'])
+def insert_new_exam():
+    cur = mysql.connection.cursor()
+    if request.method != 'POST':
+        return jsonify(error="REQUIRES POST REQUEST")
 
+    content_type = request.headers.get("Content-Type")
+    if content_type == 'application/json':
+        req = request.json
+        name = req['name']
+        details = req['details']
+        madeby = req['professorID']
+        cur.execute("INSERT INTO exams(id, name, details, madeby) VALUES(null,\"{}\",\"{}\",\"{}\")".format(name, details, madeby))
+        mysql.connection.commit()
+        cur.execute("SELECT MAX(id) AS id FROM exams")
+        result = cur.fetchall()[0]['id']
+        return jsonify(result="OK", examID=result)
+    else:
+        return jsonify(error="JSON FORMAT REQUIRED")
 
 if __name__ == '__main__':
     gunicorn_logger = logging.getLogger('gunicorn.error')
     app.logger.handlers = gunicorn_logger.handlers
     app.logger.setLevel(gunicorn_logger.level)
-    app.run(host="0.0.0.0")
+    #app.run(host="0.0.0.0")
+    app.run(debug=True)
