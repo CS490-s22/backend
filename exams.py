@@ -38,3 +38,16 @@ def create_new_exam():
         return jsonify(examID=eid), 201
     else:
         return jsonify(error="JSON FORMAT REQUIRED"), 400
+
+@exams.route('/exams', methods=['GET','POST'])
+def retreive_questions():
+    cur = mysql.connection.cursor()
+    if request.method == "GET":
+        rows = cur.execute("SELECT * FROM exams ORDER BY id DESC")
+        if rows > 0:
+            result = cur.fetchall()
+            return jsonify(result)
+    elif request.method == "POST":
+        return jsonify(error = "POST not implemented yet"), 501
+    else:
+        return jsonify(error="Howdidyougethere?"), 400
