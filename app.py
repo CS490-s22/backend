@@ -1,8 +1,9 @@
 import json
 from flask import Flask, jsonify, request
-from flask_mysqldb import MySQL
+from database import mysql
 from db_cred import db #creds
 from hashlib import sha1
+from questions import questions
 import logging
 
 app = Flask(__name__)
@@ -13,9 +14,9 @@ app.config['MYSQL_PASSWORD'] = db['mysql_pass']
 app.config['MYSQL_DB'] = db['mysql_db']
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
-mysql = MySQL(app)
+mysql.init_app(app)
 
-from questions import questions
+
 app.register_blueprint(questions)
 
 @app.route('/', methods=['GET', 'POST'])

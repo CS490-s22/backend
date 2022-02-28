@@ -1,6 +1,5 @@
 from flask import Blueprint, jsonify, request, current_app as app
-from flask_mysqldb import MySQL
-from app import mysql
+from database import mysql
 import logging
 
 questions = Blueprint("questions",__name__)
