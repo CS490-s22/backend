@@ -13,9 +13,7 @@ app.config['MYSQL_USER'] = db['mysql_user']
 app.config['MYSQL_PASSWORD'] = db['mysql_pass']
 app.config['MYSQL_DB'] = db['mysql_db']
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
-
 mysql.init_app(app)
-
 
 app.register_blueprint(questions)
 
@@ -48,11 +46,11 @@ def validate_login():
                 cur.execute("SELECT id, firstname, lastname FROM professors WHERE username = '{0}' ".format(username)) 
                 res = cur.fetchall()[0]
 
-            return jsonify(role=user_role, lastName=res['lastname'], firstName=res['firstname'], id=res['id'], username=username)
+            return jsonify(role=user_role, lastName=res['lastname'], firstName=res['firstname'], id=res['id'], username=username), 200
         else:
-            return jsonify(error='Invalid Credentials')
+            return jsonify(error='Invalid Credentials'), 400
     else:
-        return jsonify(error = "Content-Type not supported | Request must be in JSON format")
+        return jsonify(error = "Content-Type not supported | Request must be in JSON format"), 400
     
 
 #Create new exam
@@ -60,7 +58,7 @@ def validate_login():
 def insert_new_exam():
     cur = mysql.connection.cursor()
     if request.method != 'POST':
-        return jsonify(error="REQUIRES POST REQUEST")
+        return jsonify(error="REQUIRES POST REQUEST"), 400
 
     content_type = request.headers.get("Content-Type")
     if content_type == 'application/json':
@@ -72,9 +70,9 @@ def insert_new_exam():
         mysql.connection.commit()
         cur.execute("SELECT MAX(id) AS id FROM exams")
         result = cur.fetchall()[0]['id']
-        return jsonify(result="OK", examID=result)
+        return jsonify(examID=result), 201
     else:
-        return jsonify(error="JSON FORMAT REQUIRED")
+        return jsonify(error="JSON FORMAT REQUIRED"), 400
 
 if __name__ == '__main__':
     gunicorn_logger = logging.getLogger('gunicorn.error')

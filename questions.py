@@ -27,9 +27,9 @@ def retreive_questions():
                 result = cur.fetchall()
             return jsonify(result)
         else:
-            return jsonify(error = "Content-Type not supported | Request must be in JSON format")
+            return jsonify(error = "Content-Type not supported | Request must be in JSON format"), 400
     else:
-        return jsonify(error="Howdidyougethere?")
+        return jsonify(error="Howdidyougethere?"), 400
 
 #Insert new question into question bank
 @questions.route('/new_question', methods=['POST'])
@@ -56,12 +56,13 @@ def insert_new_question():
         question_id = cur.fetchall()[0]['id']
         
         for case in testcases:
-            caseI = case['input']
-            caseO = case['output']
-            rows_affected = cur.execute("INSERT INTO testcases(id, qid, input, output) VALUES(null,{},'{}','{}')".format(question_id,caseI,caseO))
+            caseI = case['functionCall']
+            caseO = case['expectedOutput']
+            output_type = case['type']
+            rows_affected = cur.execute("INSERT INTO testcases(id, qid, input, output,outputtype) VALUES(null,{},'{}','{}','{}')".format(question_id,caseI,caseO,output_type))
             mysql.connection.commit()
             logging.warn("ROWS INSERTED INTO TESTCASES: %d", rows_affected)
         
-        return jsonify(result="OK", questionID = question_id)
+        return jsonify(questionID = question_id), 201
     else:
-        return jsonify(error="JSON FORMAT REQUIRED")
+        return jsonify(error="JSON FORMAT REQUIRED"), 400
