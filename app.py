@@ -1,5 +1,4 @@
 import json
-from questions import questions
 from flask import Flask, jsonify, request
 from flask_mysqldb import MySQL
 from db_cred import db #creds
@@ -16,6 +15,7 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 mysql = MySQL(app)
 
+from questions import questions
 app.register_blueprint(questions)
 
 @app.route('/', methods=['GET', 'POST'])
