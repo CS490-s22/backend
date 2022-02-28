@@ -4,6 +4,7 @@ from database import mysql
 from db_cred import db #creds
 from hashlib import sha1
 from questions import questions
+from exams import exams
 import logging
 
 app = Flask(__name__)
@@ -16,6 +17,7 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 mysql.init_app(app)
 
 app.register_blueprint(questions)
+app.register_blueprint(exams)
 
 @app.route('/', methods=['GET', 'POST'])
 def start_app():
@@ -52,34 +54,6 @@ def validate_login():
     else:
         return jsonify(error = "Content-Type not supported | Request must be in JSON format"), 400
     
-
-#Create new exam
-@app.route('/new_exam',methods=['POST'])
-def insert_new_exam():
-    cur = mysql.connection.cursor()
-    if request.method != 'POST':
-        return jsonify(error="REQUIRES POST REQUEST"), 400
-
-    content_type = request.headers.get("Content-Type")
-    if content_type == 'application/json':
-        req = request.json
-        name = req['name']
-        details = req['description']
-        madeby = req['professorID']
-        questions = req['questions']
-        cur.execute("INSERT INTO exams(id, name, details, madeby) VALUES(null,\"{}\",\"{}\",\"{}\")".format(name, details, madeby))
-        
-        for q in questions:
-            qid = req['questionID']
-            points = req['points']
-
-
-        mysql.connection.commit()
-        cur.execute("SELECT MAX(id) AS id FROM exams")
-        result = cur.fetchall()[0]['id']
-        return jsonify(examID=result), 201
-    else:
-        return jsonify(error="JSON FORMAT REQUIRED"), 400
 
 if __name__ == '__main__':
     gunicorn_logger = logging.getLogger('gunicorn.error')
