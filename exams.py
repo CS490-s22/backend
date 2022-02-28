@@ -32,7 +32,7 @@ def create_new_exam():
         for q in questions:
             qid = q['questionID']
             points = q['points']
-            cur.execute("INSERT INTO exam_questions(id, eid, qid, points) VALUES(null, {}, {}, {})".format(eid, qid, points))
+            cur.execute("INSERT INTO examquestions(id, eid, qid, points) VALUES(null, {}, {}, {})".format(eid, qid, points))
             mysql.connection.commit()
 
         return jsonify(examID=eid), 201
