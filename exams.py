@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request, current_app as app
 from database import mysql
 import logging
 
-exams = Blueprint("exams")
+exams = Blueprint("exams",__name__)
 
 #Create new exam
 @exams.route('/new_exam',methods=['POST'])
