@@ -19,7 +19,11 @@ def create_new_exam():
         madeby = req['professorID']
         questions = req['questions']
 
-        rows = cur.execute("INSERT INTO exams(id, name, details, madeby, points) VALUES(null,\"{}\",\"{}\",\"{}\",{})".format(name, details, madeby, 1))
+        totalpoints = 0
+        for q in questions:
+            totalpoints += q['points']
+
+        rows = cur.execute("INSERT INTO exams(id, name, details, madeby, points) VALUES(null,\"{}\",\"{}\",\"{}\",{})".format(name, details, madeby, totalpoints))
         mysql.connection.commit()
         logging.warn("ROWS INSERTED INTO Exams: %d", rows)
 
