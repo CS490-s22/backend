@@ -20,7 +20,7 @@ def create_new_exam():
         questions = req['questions']
 
         rows = cur.execute("INSERT INTO exams(id, name, details, madeby, points) VALUES(null,\"{}\",\"{}\",\"{}\",{})".format(name, details, madeby, 1))
-        mysql.connections.commit()
+        mysql.connection.commit()
         logging.warn("ROWS INSERTED INTO Exams: %d", rows)
 
         cur.execute("SELECT MAX(id) AS id FROM exams")
