@@ -1,10 +1,10 @@
 from flask import Blueprint, jsonify, request, current_app as app
+from app import mysql
 import logging
 from flask_mysqldb import MySQL
 
 questions = Blueprint("questions",__name__)
 
-mysql = MySQL(app)
 
 # -----------------------
 # TEACHER FUNCTIONALITIES
