@@ -64,9 +64,16 @@ def insert_new_exam():
     if content_type == 'application/json':
         req = request.json
         name = req['name']
-        details = req['details']
+        details = req['description']
         madeby = req['professorID']
+        questions = req['questions']
         cur.execute("INSERT INTO exams(id, name, details, madeby) VALUES(null,\"{}\",\"{}\",\"{}\")".format(name, details, madeby))
+        
+        for q in questions:
+            qid = req['questionID']
+            points = req['points']
+
+
         mysql.connection.commit()
         cur.execute("SELECT MAX(id) AS id FROM exams")
         result = cur.fetchall()[0]['id']
