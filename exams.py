@@ -21,7 +21,7 @@ def create_new_exam():
 
         totalpoints = 0
         for q in questions:
-            totalpoints += q['points']
+            totalpoints += int(q['points'])
 
         rows = cur.execute("INSERT INTO exams(id, name, details, madeby, points) VALUES(null,\"{}\",\"{}\",\"{}\",{})".format(name, details, madeby, totalpoints))
         mysql.connections.commit()
