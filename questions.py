@@ -13,7 +13,7 @@ questions = Blueprint("questions",__name__)
 def retreive_questions():
     cur = mysql.connection.cursor()
     if request.method == "GET":
-        rows = cur.execute("SELECT id, title, topics AS 'category', question AS description, difficulty, madeby FROM questions")
+        rows = cur.execute("SELECT id, title, topics AS 'category', question AS description, difficulty, madeby FROM questions ORDER BY id DESC")
         if rows > 0:
             result = cur.fetchall()
             return jsonify(result)
@@ -22,7 +22,7 @@ def retreive_questions():
         if content_type == "application/json":
             req = request.json
             limit = req['limit']
-            rows = cur.execute(f"SELECT id, title, topics AS 'category', question AS description, difficulty, madeby FROM questions LIMIT {limit}")
+            rows = cur.execute(f"SELECT id, title, topics AS 'category', question AS description, difficulty, madeby FROM questions ORDER BY id DESC LIMIT {limit}")
             if rows > 0:
                 result = cur.fetchall()
             return jsonify(result)
