@@ -51,3 +51,39 @@ def retreive_questions():
         return jsonify(error = "POST not implemented yet"), 501
     else:
         return jsonify(error="Howdidyougethere?"), 400
+
+@exams.route('/exam_status', methods=['POST'])
+def check_exam_status():
+    cur = mysql.connection.cursor()
+
+    content_type = request.headers.get("Content-Type")
+    if content_type == 'application/json':
+        req = request.json
+        examID = req['examID']
+        rows = cur.execute('SELECT open FROM exams WHERE id = {}'.format(examID))
+
+        if rows > 0:
+            result = cur.fetchall()[0]['open']
+
+            return jsonify(open=bool(result)), 200
+        else:
+            return jsonify(error="NO SUCH EXAM ID FOUND"), 400
+    else:
+        return jsonify(error="JSON FORMAT REQUIRED"), 400
+
+@exams.route('/open_exam', methods=['POST'])
+def open_exam():
+    cur = mysql.connection.cursor()
+
+    content_type = request.headers.get("Content-Type")
+    if content_type == 'application/json':
+        req = request.json
+        examID = req['examID']
+        try:
+            cur.execute('UPDATE exams SET open = 1 WHERE id = {}'.format(examID))
+            mysql.connection.commit()
+            return jsonify(resonse="EXAM OPENED!")
+        except:
+            return jsonify(error="QUERY ERROR"), 400
+    else:
+        return jsonify(error="JSON FORMAT REQUIRED"), 400
