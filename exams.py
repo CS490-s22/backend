@@ -75,6 +75,7 @@ def check_exam_status():
 @exams.route('/change_exam_status', methods=['POST'])
 @cross_origin()
 def change_exam_status():
+    logging.getLogger('flask_cors').level = logging.DEBUG
     cur = mysql.connection.cursor()
 
     content_type = request.headers.get("Content-Type")
