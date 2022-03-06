@@ -41,7 +41,7 @@ def create_new_exam():
         return jsonify(error="JSON FORMAT REQUIRED"), 400
 
 @exams.route('/exams', methods=['POST'])
-def retreive_questions():
+def retreive_exams():
     cur = mysql.connection.cursor()
     content_type = request.headers.get("Content-Type")
     if content_type == "application/json":
