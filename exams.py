@@ -97,3 +97,33 @@ def change_exam_status():
             return jsonify(error="QUERY ERROR"), 400
     else:
         return jsonify(error="JSON FORMAT REQUIRED"), 400
+
+@exams.route('/submit_exam_attempt', methods=['POST'])
+def submit_exam_attempt():
+    cur = mysql.connection.cursor()
+
+    content_type = request.headers.get("Content-Type")
+    if content_type == 'application/json':
+        req = request.json
+        eid = req['examID']
+        sid = req['studentID']
+        pid = req['professorID']
+        answers = req['answers']
+        try:
+            cur.execute(f'INSERT INTO examattempts (id, sid, pid, eid) VALUES (null, {sid}, {pid}, {eid})')
+            mysql.connection.commit()
+            rows = cur.execute(f'SELECT id FROM examattempts WHERE sid={sid} AND pid={pid} AND eid={eid})')
+            if rows > 0:
+                eaid = cur.fetchall()[0]['id']
+                for answer in answers:
+                    eqid = answer['eqID']
+                    response = answer['response']
+                    cur.execute(f'INSERT INTO examattemptanswers (id, eqid, eaid, answer) VALUES (null,{eqid}, {eaid}, {response})')
+                    mysql.connection.commit()
+                return jsonify(examattemptID=eaid), 200
+            else:
+                return jsonify(error="EXAM ATTEMPT FAILED TO SUBMIT, CHECK PROVIED CREDENTIAL"), 400
+        except Exception as e:
+            return jsonify(error=str(e)), 400
+    else:
+        return jsonify(error="JSON FORMAT REQUIRED"), 400
