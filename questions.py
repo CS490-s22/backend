@@ -82,27 +82,6 @@ def retrieve_question_details():
     else:
         return jsonify(error="RECEIVED DATA ISN'T IN JSON FORMAT"), 400
 
-@questions.route('/exam_questions',methods='POST')
-def retrieve_exam_questions():
-    cur = mysql.connection.cursor()
-    content_type = request.headers.get("Content-Type")
-    if content_type == 'application/json':
-        req = request.json
-        eid = req['examID']
-        rows = cur.execute("SELECT name, open FROM exams WHERE id={}".format(eid))
-        result = cur.fetchall()[0]
-        examname = result['name']
-        examstatus = result['open']
-        rows = cur.execute("SELECT eq.id as eqid, q.id AS qid, q.title AS title, q.question AS question, q.difficulty AS difficulty FROM questions AS q, examquestions AS eq WHERE  eq.eid = {} && eq.qid = q.id;".format(eid))
-        
-        if rows > 0:
-            result = cur.fetchall()
-            return jsonify(name=examname,status=examstatus,questions_array=result), 200
-        else:
-            return jsonify(error="NO QUESTIONS FOUND FOR THIS EXAM"), 400
-    else:
-        return jsonify(error="RECEIVED DATA ISN'T IN JSON FORMAT"), 400
-
 @questions.route('/retrieve_exam_attempts', methods=['POST'])
 def retrieve_exam_attempts():
     cur = mysql.connection.cursor()
