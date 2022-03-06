@@ -95,7 +95,7 @@ def retrieve_exam_questions():
         result = cur.fetchall()[0]
         examname = result['name']
         examstatus = result['open']
-        rows = cur.execute("SELECT eq.id as eqid, q.id AS qid, q.title AS title, q.question AS question, q.difficulty AS difficulty FROM questions AS q, examquestions AS eq WHERE  eq.eid = {} && eq.qid = q.id;".format(eid))
+        rows = cur.execute("SELECT eq.id as eqid, q.id AS qid, eq.points as points, q.title AS title, q.question AS question, q.difficulty AS difficulty FROM questions AS q, examquestions AS eq WHERE  eq.eid = {} && eq.qid = q.id;".format(eid))
         
         if rows > 0:
             result = cur.fetchall()
