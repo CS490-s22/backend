@@ -82,6 +82,18 @@ def retrieve_question_details():
     else:
         return jsonify(error="RECEIVED DATA ISN'T IN JSON FORMAT"), 400
 
+# Retrieve test cases for given questionID
+@questions.route('/test_cases', methods=['GET'])
+def retrieve_test_cases():
+    cur = mysql.connection.cursor()
+
+    qid = request.args.get("questionID")
+    rows = cur.execute(f"SELECT input AS functionCall, output AS expectedOutput, outputtype AS type FROM testcases WHERE qid={qid}")
+    if rows > 0:
+        res = cur.fetchall()
+        return jsonify(res), 200
+    else:
+        return jsonify(error="INVALID QUESTION ID"), 400
 
 
 @questions.route('/exam_questions', methods=['POST'])
