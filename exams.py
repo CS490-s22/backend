@@ -71,18 +71,19 @@ def check_exam_status():
     else:
         return jsonify(error="JSON FORMAT REQUIRED"), 400
 
-@exams.route('/open_exam', methods=['POST'])
-def open_exam():
+@exams.route('/change_exam_status', methods=['POST'])
+def change_exam_status():
     cur = mysql.connection.cursor()
 
     content_type = request.headers.get("Content-Type")
     if content_type == 'application/json':
         req = request.json
         examID = req['examID']
+        status = req['status']
         try:
-            cur.execute('UPDATE exams SET open = 1 WHERE id = {}'.format(examID))
+            cur.execute('UPDATE exams SET open = {} WHERE id = {}'.format(status, examID))
             mysql.connection.commit()
-            return jsonify(resonse="EXAM OPENED!")
+            return jsonify(resonse="STATUS CHANGED!")
         except:
             return jsonify(error="QUERY ERROR"), 400
     else:
