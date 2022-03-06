@@ -73,7 +73,7 @@ def check_exam_status():
         return jsonify(error="JSON FORMAT REQUIRED"), 400
 
 @exams.route('/change_exam_status', methods=['POST'])
-@cross_origin()
+@cross_origin(origin='*',headers=['Content-Type','Authorization'])
 def change_exam_status():
     logging.getLogger('flask_cors').level = logging.DEBUG
     cur = mysql.connection.cursor()
