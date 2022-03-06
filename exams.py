@@ -48,7 +48,7 @@ def retreive_questions():
         req = request.json
         role = req['role']
         if role == "Student":
-            rows = cur.execute("SELECT * FROM exams WHERE open == 1 ORDER BY id DESC")
+            rows = cur.execute("SELECT * FROM exams WHERE open = 1 ORDER BY id DESC")
         else:
             rows = cur.execute("SELECT * FROM exams ORDER BY id DESC")
         if rows > 0:
