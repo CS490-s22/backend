@@ -1,6 +1,5 @@
 from flask import Blueprint, jsonify, request, current_app as app
 from flask_cors import cross_origin
-from requests.structures import CaseInsensitiveDict
 from database import mysql
 import logging
 
