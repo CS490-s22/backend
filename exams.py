@@ -1,4 +1,6 @@
 from flask import Blueprint, jsonify, request, current_app as app
+from flask_cors import cross_origin
+from requests.structures import CaseInsensitiveDict
 from database import mysql
 import logging
 
@@ -72,6 +74,7 @@ def check_exam_status():
         return jsonify(error="JSON FORMAT REQUIRED"), 400
 
 @exams.route('/change_exam_status', methods=['POST'])
+@cross_origin()
 def change_exam_status():
     cur = mysql.connection.cursor()
 
