@@ -97,7 +97,7 @@ def retrieve_exam_questions():
         
         if rows > 0:
             result = cur.fetchall()
-            return jsonify(name=examname,status=examstatus,questions=result), 200
+            return jsonify(name=examname,status=examstatus,questions_array=result), 200
         else:
             return jsonify(error="NO QUESTIONS FOUND FOR THIS EXAM"), 400
     else:
