@@ -92,7 +92,7 @@ def change_exam_status():
         try:
             cur.execute('UPDATE exams SET open = {} WHERE id = {}'.format(status, examID))
             mysql.connection.commit()
-            return jsonify(resonse="STATUS CHANGED!")
+            return jsonify(resonse="STATUS CHANGED!"), 200
         except:
             return jsonify(error="QUERY ERROR"), 400
     else:
