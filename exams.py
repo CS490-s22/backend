@@ -40,18 +40,24 @@ def create_new_exam():
     else:
         return jsonify(error="JSON FORMAT REQUIRED"), 400
 
-@exams.route('/exams', methods=['GET','POST'])
+@exams.route('/exams', methods=['POST'])
 def retreive_questions():
     cur = mysql.connection.cursor()
-    if request.method == "GET":
-        rows = cur.execute("SELECT * FROM exams ORDER BY id DESC")
+    content_type = request.headers.get("Content-Type")
+    if content_type == "application/json":
+        req = request.json
+        role = req['role']
+        if role == "Student":
+            rows = cur.execute("SELECT * FROM exams WHERE open == 1 ORDER BY id DESC")
+        else:
+            rows = cur.execute("SELECT * FROM exams ORDER BY id DESC")
         if rows > 0:
             result = cur.fetchall()
             return jsonify(result)
-    elif request.method == "POST":
-        return jsonify(error = "POST not implemented yet"), 501
+        else:
+            return jsonify(error="NO EXAMS")
     else:
-        return jsonify(error="Howdidyougethere?"), 400
+        return jsonify(error="JSON FORMAT REQUIRED"), 400
 
 @exams.route('/exam_status', methods=['POST'])
 def check_exam_status():
