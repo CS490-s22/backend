@@ -35,8 +35,6 @@ def retreive_questions():
 @questions.route('/new_question', methods=['POST'])
 def insert_new_question():
     cur = mysql.connection.cursor()
-    if request.method != 'POST':
-        return jsonify(error="REQUIRES POST REQUEST")
     
     content_type = request.headers.get("Content-Type")
     if content_type == 'application/json':
@@ -66,3 +64,39 @@ def insert_new_question():
         return jsonify(questionID = question_id), 201
     else:
         return jsonify(error="JSON FORMAT REQUIRED"), 400
+
+# Retrieve question info given question id
+@questions.route('/retrieve_question', methods=['POST'])
+def retrieve_question_details():
+    cur = mysql.connection.cursor()
+    content_type = request.headers.get("Content-Type")
+    if content_type == 'application/json':
+        req = request.json
+        qid = req['questionID']
+        rows = cur.execute("SELECT * FROM questions WHERE id={}".format(qid))
+        if rows > 0:
+            res = cur.fetchall()[0]
+            return jsonify(res), 200
+        else:
+            return jsonify(error="INVALID QUESTION ID"), 400
+    else:
+        return jsonify(error="RECEIVED DATA ISN'T IN JSON FORMAT"), 400
+
+@questions.route('/retrieve_exam_attempts', methods=['POST'])
+def retrieve_exam_attempts():
+    cur = mysql.connection.cursor()
+    content_type = request.headers.get("Content-Type")
+    if content_type == 'application/json':
+        req = request.json
+        eid = req['examID']
+        rows = cur.execute("SELECT * FROM exams WHERE id={}".format(eid))
+        if rows == 0:
+            return jsonify(error="INVALID EXAM ID")
+        rows = cur.execute("SELECT * FROM examattempts WHERE eid={}".format(eid))
+        if rows > 0:
+            res = cur.fetchall()
+            return jsonify(res), 200
+        else:
+            return jsonify(error="NO ATTEMPTS WERE MADE FOR THIS EXAM"), 400
+    else:
+        return jsonify(error="RECEIVED DATA ISN'T IN JSON FORMAT"), 400
