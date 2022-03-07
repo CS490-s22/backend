@@ -4,10 +4,6 @@ import logging
 
 questions = Blueprint("questions",__name__)
 
-
-# -----------------------
-# TEACHER FUNCTIONALITIES
-# -----------------------
 # Retreive Question Bank or questions based on request method
 @questions.route('/question_bank', methods=['GET','POST'])
 def retreive_questions():

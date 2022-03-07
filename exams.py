@@ -109,21 +109,57 @@ def submit_exam_attempt():
         sid = req['studentID']
         pid = req['professorID']
         answers = req['answers']
+        cur.execute(f'INSERT INTO examattempts (id, sid, pid, eid) VALUES (null, {sid}, {pid}, {eid})')
+        mysql.connection.commit()
+        rows = cur.execute(f'SELECT id FROM examattempts WHERE sid={sid} AND pid={pid} AND eid={eid})')
+        if rows > 0:
+            eaid = cur.fetchall()[0]['id']
+            for answer in answers:
+                eqid = answer['eqID']
+                response = answer['response']
+                cur.execute(f'INSERT INTO examattemptanswers (id, eqid, eaid, answer) VALUES (null,{eqid}, {eaid}, {response})')
+                mysql.connection.commit()
+            return jsonify(examattemptID=eaid), 200
+        else:
+            return jsonify(error="EXAM ATTEMPT FAILED TO SUBMIT, CHECK PROVIED CREDENTIAL"), 400
+    else:
+        return jsonify(error="JSON FORMAT REQUIRED"), 400
+
+@exams.route('/exam_attempts', methods=['POST'])
+def retrieve_exam_attempt():
+    cur = mysql.connection.cursor()
+
+    content_type = request.headers.get("Content-Type")
+    if content_type == 'application/json':
+        req = request.json
+        eid = req['examID']
         try:
-            cur.execute(f'INSERT INTO examattempts (id, sid, pid, eid) VALUES (null, {sid}, {pid}, {eid})')
-            mysql.connection.commit()
-            rows = cur.execute(f'SELECT id FROM examattempts WHERE sid={sid} AND pid={pid} AND eid={eid})')
+            rows = cur.execute(f'SELECT id AS eaid, sid FROM examattempts WHERE eid={eid}')
             if rows > 0:
-                eaid = cur.fetchall()[0]['id']
-                for answer in answers:
-                    eqid = answer['eqID']
-                    response = answer['response']
-                    cur.execute(f'INSERT INTO examattemptanswers (id, eqid, eaid, answer) VALUES (null,{eqid}, {eaid}, {response})')
-                    mysql.connection.commit()
-                return jsonify(examattemptID=eaid), 200
+                examattempts = cur.fetchall()
+                rows = cur.execute(f'SELECT id AS eqid, qid FROM examquestions WHERE eid={eid}')
+                examquestions= cur.fetchall()
+                attempts = list()
+                for attempt in examattempts:
+                    eaid = attempt['eaid']
+                    sid = attempt['sid']
+                    questions = list()
+                    for eq in examquestions:
+                        qid = eq['qid']
+                        eqid = eq['eqid']
+                        rows = cur.execute(f'SELECT answer FROM examattemptanswers WHERE eaid = {eaid} AND eqid={eqid}')
+                        ans = cur.fetchall()[0]['answer']
+                        rows = cur.execute(f'SELECT input, output, outputtype FROM testcases WHERE qid={qid}')
+                        testcases = cur.fetchall()
+                        cases = list()
+                        for case in testcases:
+                            cases.append[{'functionCall': case['input'], 'expectedOutput':case['output'], 'type': case['outputtype']}]
+                        questions.append({'examquestionID':eqid, 'testcases':cases, 'response': ans})
+                    attempts.append({"studentID": sid, "examattemptID": eaid, "questions":questions})
+                return jsonify(attempts)
             else:
-                return jsonify(error="EXAM ATTEMPT FAILED TO SUBMIT, CHECK PROVIED CREDENTIAL"), 400
+                return jsonify(error="NO SUBMISSIONS FOR THIS EXAM")
         except Exception as e:
-            return jsonify(error=str(e)), 400
+            return jsonify(error=f"QUERRY ERROR: {str(e)}"), 400
     else:
         return jsonify(error="JSON FORMAT REQUIRED"), 400

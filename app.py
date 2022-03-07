@@ -5,6 +5,7 @@ from db_cred import db #creds
 from hashlib import sha1
 from questions import questions
 from exams import exams
+from results import results
 import logging
 
 app = Flask(__name__)
@@ -18,6 +19,7 @@ mysql.init_app(app)
 
 app.register_blueprint(questions)
 app.register_blueprint(exams)
+app.register_blueprint(results)
 
 @app.route('/', methods=['GET', 'POST'])
 def start_app():
