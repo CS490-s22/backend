@@ -157,7 +157,7 @@ def retrieve_exam_attempt():
                     cases = list()
                     for case in testcases:
                         cases.append({'functionCall': case['input'], 'expectedOutput':case['output'], 'type': case['outputtype']})
-                    questions.append({'examquestionID':eqid, 'testcases':cases, 'response': str(ans)})
+                    questions.append({'examquestionID':eqid, 'testcases':cases, 'response': ans.decode("utf-8")})
                 attempts.append({"studentID": sid, "examattemptID": eaid, "questions":questions})
             return jsonify(attempts)
         else:
