@@ -109,7 +109,7 @@ def submit_exam_attempt():
         sid = req['studentID']
         pid = req['professorID']
         answers = req['answers']
-        cur.execute(f'INSERT INTO examattempts (id, sid, pid, eid) VALUES (null, {sid}, {pid}, {eid})')
+        cur.execute(f'INSERT INTO examattempts(id, sid, pid, eid) VALUES (null, {sid}, {pid}, {eid})')
         mysql.connection.commit()
         rows = cur.execute(f'SELECT id FROM examattempts WHERE sid={sid} AND pid={pid} AND eid={eid})')
         if rows > 0:
@@ -117,7 +117,7 @@ def submit_exam_attempt():
             for answer in answers:
                 eqid = answer['eqID']
                 response = answer['response']
-                cur.execute(f'INSERT INTO examattemptanswers (id, eqid, eaid, answer) VALUES (null,{eqid}, {eaid}, {response})')
+                cur.execute(f'INSERT INTO examattemptanswers(id, eqid, eaid, answer) VALUES (null,{eqid}, {eaid}, "{response}")')
                 mysql.connection.commit()
             return jsonify(examattemptID=eaid), 200
         else:

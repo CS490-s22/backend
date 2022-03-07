@@ -16,7 +16,7 @@ def score_exams_attempts():
         for attempt in attempts:
             eaid = attempt['examattemptID']
             escore = attempt['score']
-            cur.execute(f'INSERT INTO results (id, eaid, score) VALUES (null, {eaid}, {escore}')
+            cur.execute(f'INSERT INTO results(id, eaid, score) VALUES (null, {eaid}, {escore}')
             mysql.connection.commit()
             cur.execute(f'SELECT id FROM results WHERE eaid={eaid}')
             rid = cur.fetachall()[0]['id']
@@ -24,7 +24,7 @@ def score_exams_attempts():
             for question in questions:
                 eqid = question['examquestionID']
                 qscore = questions['questionscore']
-                cur.execute(f'INSERT INTO questionresults (id, rid, eqid, score) VALUES (null, {rid}, {eqid}, {qscore}')
+                cur.execute(f'INSERT INTO questionresults(id, rid, eqid, score) VALUES (null, {rid}, {eqid}, {qscore}')
             resultIDs.append({'examattemptID':eaid, 'resultID':rid})
         return jsonify(resultIDs), 200
     else:
