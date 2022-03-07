@@ -117,7 +117,7 @@ def submit_exam_attempt():
             for answer in answers:
                 eqid = answer['eqid']
                 response = answer['answer']
-                cur.execute(f'INSERT INTO examattemptanswers(id, eqid, eaid, answer) VALUES (null,{eqid}, {eaid}, "{response}")')
+                cur.execute("""INSERT INTO examattemptanswers(id, eqid, eaid, answer) VALUES (null, %i, %i, %s)""", (eqid, eaid, response))
                 mysql.connection.commit()
             return jsonify(examattemptID=eaid), 200
         else:
