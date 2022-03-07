@@ -111,7 +111,7 @@ def submit_exam_attempt():
         answers = req['answers']
         cur.execute(f'INSERT INTO examattempts(id, sid, pid, eid) VALUES (null, {sid}, {pid}, {eid})')
         mysql.connection.commit()
-        rows = cur.execute(f'SELECT id FROM examattempts WHERE sid={sid} AND pid={pid} AND eid={eid})')
+        rows = cur.execute(f'SELECT id FROM examattempts WHERE sid={sid} AND pid={pid} AND eid={eid}')
         if rows > 0:
             eaid = cur.fetchall()[0]['id']
             for answer in answers:
