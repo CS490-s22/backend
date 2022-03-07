@@ -159,6 +159,8 @@ def retrieve_exam_attempt():
                         cases.append({'functionCall': case['input'], 'expectedOutput':case['output'], 'type': case['outputtype']})
                     questions.append({'examquestionID':eqid, 'testcases':cases, 'response': ans})
                 attempts.append({"studentID": sid, "examattemptID": eaid, "questions":questions})
+            print(attempts)
+            print(type(ans))
             return jsonify(attempts)
         else:
             return jsonify(error="NO SUBMISSIONS FOR THIS EXAM")
