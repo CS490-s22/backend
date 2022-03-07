@@ -153,7 +153,7 @@ def retrieve_exam_attempt():
                         testcases = cur.fetchall()
                         cases = list()
                         for case in testcases:
-                            cases.append[{'functionCall': case['input'], 'expectedOutput':case['output'], 'type': case['outputtype']}]
+                            cases.append({'functionCall': case['input'], 'expectedOutput':case['output'], 'type': case['outputtype']})
                         questions.append({'examquestionID':eqid, 'testcases':cases, 'response': ans})
                     attempts.append({"studentID": sid, "examattemptID": eaid, "questions":questions})
                 return jsonify(attempts)
