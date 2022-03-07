@@ -50,7 +50,7 @@ def retreive_exams():
         if role == "Student":
             rows = cur.execute("SELECT * FROM exams WHERE open = 1 ORDER BY id DESC")
         else:
-            rows = cur.execute("SELECT * FROM exams ORDER BY id DESC")
+            rows = cur.execute("SELECT exams.* , COUNT(examattempts.id) AS attempts FROM exams, examattempts ORDER BY id DESC;")
         if rows > 0:
             result = cur.fetchall()
             return jsonify(result)
@@ -133,6 +133,9 @@ def retrieve_exam_attempt():
     if content_type == 'application/json':
         req = request.json
         eid = req['examID']
+        rows = cur.execute(f'SELECT * FROM exams WHERE id={eid}')
+        if rows == 0:
+            return jsonify(error="EXAM ID NOT VALID")
         rows = cur.execute(f'SELECT id AS eaid, sid FROM examattempts WHERE eid={eid}')
         if rows > 0:
             examattempts = cur.fetchall()
