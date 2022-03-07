@@ -133,33 +133,30 @@ def retrieve_exam_attempt():
     if content_type == 'application/json':
         req = request.json
         eid = req['examID']
-        try:
-            rows = cur.execute(f'SELECT id AS eaid, sid FROM examattempts WHERE eid={eid}')
-            if rows > 0:
-                examattempts = cur.fetchall()
-                rows = cur.execute(f'SELECT id AS eqid, qid FROM examquestions WHERE eid={eid}')
-                examquestions= cur.fetchall()
-                attempts = list()
-                for attempt in examattempts:
-                    eaid = attempt['eaid']
-                    sid = attempt['sid']
-                    questions = list()
-                    for eq in examquestions:
-                        qid = eq['qid']
-                        eqid = eq['eqid']
-                        rows = cur.execute(f'SELECT answer FROM examattemptanswers WHERE eaid = {eaid} AND eqid={eqid}')
-                        ans = cur.fetchall()[0]['answer']
-                        rows = cur.execute(f'SELECT input, output, outputtype FROM testcases WHERE qid={qid}')
-                        testcases = cur.fetchall()
-                        cases = list()
-                        for case in testcases:
-                            cases.append({'functionCall': case['input'], 'expectedOutput':case['output'], 'type': case['outputtype']})
-                        questions.append({'examquestionID':eqid, 'testcases':cases, 'response': ans})
-                    attempts.append({"studentID": sid, "examattemptID": eaid, "questions":questions})
-                return jsonify(attempts)
-            else:
-                return jsonify(error="NO SUBMISSIONS FOR THIS EXAM")
-        except Exception as e:
-            return jsonify(error=f"QUERRY ERROR: {str(e)}"), 400
+        rows = cur.execute(f'SELECT id AS eaid, sid FROM examattempts WHERE eid={eid}')
+        if rows > 0:
+            examattempts = cur.fetchall()
+            rows = cur.execute(f'SELECT id AS eqid, qid FROM examquestions WHERE eid={eid}')
+            examquestions= cur.fetchall()
+            attempts = list()
+            for attempt in examattempts:
+                eaid = attempt['eaid']
+                sid = attempt['sid']
+                questions = list()
+                for eq in examquestions:
+                    qid = eq['qid']
+                    eqid = eq['eqid']
+                    rows = cur.execute(f'SELECT answer FROM examattemptanswers WHERE eaid = {eaid} AND eqid={eqid}')
+                    ans = cur.fetchall()[0]['answer']
+                    rows = cur.execute(f'SELECT input, output, outputtype FROM testcases WHERE qid={qid}')
+                    testcases = cur.fetchall()
+                    cases = list()
+                    for case in testcases:
+                        cases.append({'functionCall': case['input'], 'expectedOutput':case['output'], 'type': case['outputtype']})
+                    questions.append({'examquestionID':eqid, 'testcases':cases, 'response': ans})
+                attempts.append({"studentID": sid, "examattemptID": eaid, "questions":questions})
+            return jsonify(attempts)
+        else:
+            return jsonify(error="NO SUBMISSIONS FOR THIS EXAM")
     else:
         return jsonify(error="JSON FORMAT REQUIRED"), 400
