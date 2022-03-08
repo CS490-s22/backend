@@ -23,7 +23,7 @@ def score_exams_attempts():
             for question in questions:
                 eqid = question['examquestionID']
                 qscore = questions['questionscore']
-                cur.execute(f'INSERT INTO questionresults(id, rid, eqid, score) VALUES (null, {rid}, {eqid}, {qscore}')
+                cur.execute(f'INSERT INTO questionresults(id, rid, eqid, score) VALUES (null, {rid}, {eqid}, {qscore})')
             resultIDs.append({'examattemptID':eaid, 'resultID':rid})
         return jsonify(resultIDs), 200
     else:
