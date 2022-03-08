@@ -1,5 +1,4 @@
 from flask import Blueprint, jsonify, request, current_app as app
-from flask_cors import cross_origin
 from database import mysql
 
 results = Blueprint("results",__name__)

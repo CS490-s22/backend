@@ -139,7 +139,7 @@ def retrieve_exam_attempt():
         rows = cur.execute(f'SELECT id AS eaid, sid FROM examattempts WHERE eid={eid}')
         if rows > 0:
             examattempts = cur.fetchall()
-            rows = cur.execute(f'SELECT id AS eqid, qid FROM examquestions WHERE eid={eid}')
+            rows = cur.execute(f'SELECT id AS eqid, qid, points FROM examquestions WHERE eid={eid}')
             examquestions= cur.fetchall()
             attempts = list()
             for attempt in examattempts:
@@ -147,6 +147,7 @@ def retrieve_exam_attempt():
                 sid = attempt['sid']
                 questions = list()
                 for eq in examquestions:
+                    points = eq['points']
                     qid = eq['qid']
                     eqid = eq['eqid']
                     print(eaid, eqid, "TESTSTESTSETSETSE")
@@ -157,7 +158,7 @@ def retrieve_exam_attempt():
                     cases = list()
                     for case in testcases:
                         cases.append({'functionCall': case['input'], 'expectedOutput':case['output'], 'type': case['outputtype']})
-                    questions.append({'examquestionID':eqid, 'testcases':cases, 'response': ans.decode("utf-8")})
+                    questions.append({'examquestionID':eqid, 'points':points, 'testcases':cases, 'response': ans.decode("utf-8")})
                 attempts.append({"studentID": sid, "examattemptID": eaid, "questions":questions})
             return jsonify(attempts)
         else:
