@@ -50,7 +50,7 @@ def retreive_exams():
         if role == "Student":
             rows = cur.execute("SELECT * FROM exams WHERE open = 1 ORDER BY id DESC")
         else:
-            rows = cur.execute("SELECT exams.* , COUNT(examattempts.id) AS attempts FROM exams, examattempts ORDER BY id DESC;")
+            rows = cur.execute("SELECT exams.*, COUNT(examattempts.eid) AS attempts FROM exams LEFT JOIN examattempts ON exams.id = examattempts.eid GROUP BY exams.id;")
         if rows > 0:
             result = cur.fetchall()
             return jsonify(result)
