@@ -15,7 +15,7 @@ def score_exams_attempts():
         for attempt in attempts:
             eaid = attempt['examattemptID']
             escore = attempt['score']
-            cur.execute(f'INSERT INTO results(id, eaid, score) VALUES (null, {eaid}, {escore}')
+            cur.execute(f'INSERT INTO results(id, eaid, score) VALUES (null, {eaid}, {escore})')
             mysql.connection.commit()
             cur.execute(f'SELECT id FROM results WHERE eaid={eaid}')
             rid = cur.fetachall()[0]['id']
