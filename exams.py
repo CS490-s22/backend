@@ -161,6 +161,6 @@ def retrieve_exam_attempt():
                 attempts.append({"studentID": sid, "examattemptID": eaid, "questions":questions})
             return jsonify(attempts), 200
         else:
-            return jsonify(error="NO NEW/UNGRADED SUBMISSIONS FOR THIS EXAM"), 400
+            return jsonify(list()), 200
     else:
         return jsonify(error="JSON FORMAT REQUIRED"), 400
