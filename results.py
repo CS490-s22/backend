@@ -135,3 +135,25 @@ def retrieve_exam_result():
             return jsonify(error="NO SUBMISSIONS FOR THIS EXAM"), 400
     else:
         return jsonify(error="JSON FORMAT REQUIRED"), 400
+
+@results.route('/edit_result', methods=['POST'])
+def edit_result():
+    cur = mysql.connection.cursor()
+    content_type = request.headers.get("Content-Type")
+    if content_type == 'application/json':
+        req = request.json
+        rid = req['resultID']
+        qs = req['questions']
+        examscore = 0
+        for q in qs:
+            eqid = q['examquestionID']
+            comment = q['comment']
+            score = q['score']
+            examscore += score
+            cur.execute(f'UPDATE questionresults SET score={score} remark={comment} WHERE rid ={rid} AND eqid={eqid}')
+            mysql.connection.commit()
+        cur.execute(f'UPDATE results SET score={examscore} WHERE rid ={rid}')
+        mysql.connection.commit()
+        return jsonify(resultID=rid), 200
+    else:
+        return jsonify(error="JSON FORMAT REQUIRED"), 400
