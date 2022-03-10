@@ -146,7 +146,6 @@ def retrieve_exam_attempt():
                 for eq in examquestions:
                     qid = eq['qid']
                     eqid = eq['eqid']
-                    print(eaid, eqid, "TESTSTESTSETSETSE")
                     rows = cur.execute(f'SELECT answer FROM examattemptanswers WHERE eaid = {eaid} AND eqid={eqid}')
                     ans = cur.fetchall()[0]['answer']
                     rows = cur.execute(f'SELECT input, output, outputtype FROM testcases WHERE qid={qid}')
