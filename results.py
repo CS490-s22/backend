@@ -76,12 +76,7 @@ def retrieve_exam_results():
                     qresult = cur.fetchall()[0]
                     qscore = qresult['score']
                     qrid = qresult['qrid']
-                    cur.execute(f"SELECT com AS 'comment' FROM qresultcomments WHERE {qrid}")
-                    qcomments = cur.fetchall()
-                    comments = list()
-                    for comment in qcomments:
-                        comments.append(comment['com'])
-                    questions.append({'examquestionID':eqid, 'title':qtitle, 'questions':qq, 'qscore':qscore, 'maxpoints':maxpoints, 'response': ans.decode("utf-8"), 'comments':comments})
+                    questions.append({'examquestionID':eqid, 'title':qtitle, 'questions':qq, 'qscore':qscore, 'maxpoints':maxpoints, 'response': ans.decode("utf-8")})
                 attempts.append({"studentID": sid, 'fname':fname, 'lname':lname, "examattemptID": eaid, "resultID":rid, 'score':attemptscore, "questions":questions})
             return jsonify({'examname':examname,'maxexampoints':maxexamscore,'examattempts':attempts}), 200
         else:
@@ -129,16 +124,11 @@ def retrieve_exam_result():
                 cur.execute(f'SELECT answer FROM examattemptanswers WHERE eaid = {eaid} AND eqid={eqid}')
                 ans = cur.fetchall()[0]['answer']
                 print(rid, eqid)
-                cur.execute(f'SELECT id AS qrid, score FROM questionresults WHERE rid={rid} AND eqid={eqid}')
+                cur.execute(f'SELECT score, remark FROM questionresults WHERE rid={rid} AND eqid={eqid}')
                 qresult = cur.fetchall()[0]
                 qscore = qresult['score']
-                qrid = qresult['qrid']
-                cur.execute(f"SELECT com AS 'comment' FROM qresultcomments WHERE {qrid}")
-                qcomments = cur.fetchall()
-                comments = list()
-                for comment in qcomments:
-                    comments.append(comment['com'])
-                questions.append({'examquestionID':eqid, 'title':qtitle, 'questions':qq, 'qscore':qscore, 'maxpoints':maxpoints, 'response': ans.decode("utf-8"), 'comments':comments})
+                comment = qresult['remark']
+                questions.append({'examquestionID':eqid, 'title':qtitle, 'questions':qq, 'qscore':qscore, 'maxpoints':maxpoints, 'response': ans.decode("utf-8"), 'comments':comment})
             attempt = {"studentID": sid, 'fname':fname, 'lname':lname, "examattemptID": eaid, "resultID":rid, 'score':attemptscore, "questions":questions}
             return jsonify({'examname':examname,'maxexampoints':maxexamscore,'examattempt':attempt}), 200
         else:
