@@ -48,7 +48,8 @@ def retreive_exams():
         req = request.json
         role = req['role']
         if role == "Student":
-            rows = cur.execute("SELECT * FROM exams WHERE open = 1 ORDER BY id DESC")
+            stype = req['statustype']
+            rows = cur.execute(f"SELECT * FROM exams WHERE {stype} = 1 ORDER BY id DESC")
         else:
             rows = cur.execute("SELECT exams.*, COUNT(examattempts.eid) AS attempts FROM exams LEFT JOIN examattempts ON exams.id = examattempts.eid GROUP BY exams.id;")
         if rows > 0:
