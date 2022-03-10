@@ -70,6 +70,7 @@ def retrieve_exam_results():
                     qq = q['question']
                     cur.execute(f'SELECT answer FROM examattemptanswers WHERE eaid = {eaid} AND eqid={eqid}')
                     ans = cur.fetchall()[0]['answer']
+                    print(rid, qid)
                     cur.execute(f'SELECT id AS qrid, score FROM questionresults WHERE rid={rid} AND eqid={eqid}')
                     qresult = cur.fetchall()[0]
                     qscore = qresult['score']
