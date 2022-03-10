@@ -39,13 +39,21 @@ def retrieve_exam_results():
     if content_type == 'application/json':
         req = request.json
         eid = req['examID']
+        role = req['role']
         rows = cur.execute(f'SELECT id, name, points FROM exams WHERE id={eid}')
         if rows == 0:
             return jsonify(error="EXAM ID NOT VALID")
         exam = cur.fetchall()[0]
         examname = exam['name']
         maxexamscore = exam['points']
-        rows = cur.execute(f'SELECT id AS eaid, sid FROM examattempts WHERE eid={eid}')
+        
+        if role == 'Student':
+            sid = req['studentID']
+            query = f'SELECT id AS eaid, sid FROM examattempts WHERE eid={eid} AND sid={sid} ORDER BY id DESC'
+        else: 
+            query = f'SELECT id AS eaid, sid FROM examattempts WHERE eid={eid} ORDER BY id DESC'
+        rows = cur.execute(query)
+
         if rows > 0:
             examattempts = cur.fetchall()
             rows = cur.execute(f'SELECT id AS eqid, qid, points FROM examquestions WHERE eid={eid}')

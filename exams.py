@@ -56,7 +56,6 @@ def retreive_exams():
                                     f"WHERE e.id=examattempts.eid AND examattempts.sid = {sid} AND e.released = 1;")
             else:
                 rows = cur.execute(f"SELECT * FROM exams WHERE open = 1 ORDER BY id DESC")
-            
         else:
             rows = cur.execute("SELECT exams.*, COUNT(examattempts.eid) AS attempts FROM exams LEFT JOIN examattempts ON exams.id = examattempts.eid GROUP BY exams.id;")
         if rows > 0:
