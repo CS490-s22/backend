@@ -81,8 +81,8 @@ def retrieve_exam_results():
                         comments.append(comment['com'])
                     questions.append({'examquestionID':eqid, 'title':qtitle, 'questions':qq, 'qscore':qscore, 'maxpoints':maxpoints, 'response': ans.decode("utf-8"), 'comments':comments})
                 attempts.append({"studentID": sid, 'fname':fname, 'lname':lname, "examattemptID": eaid, "resultID":rid, 'score':attemptscore, "questions":questions})
-            return jsonify({'examname':examname,'maxexampoints':maxexamscore,'examattempts':attempts})
+            return jsonify({'examname':examname,'maxexampoints':maxexamscore,'examattempts':attempts}), 200
         else:
-            return jsonify(error="NO SUBMISSIONS FOR THIS EXAM")
+            return jsonify(error="NO SUBMISSIONS FOR THIS EXAM"), 400
     else:
         return jsonify(error="JSON FORMAT REQUIRED"), 400
