@@ -24,6 +24,7 @@ def score_exams_attempts():
                 eqid = question['examquestionID']
                 qscore = question['questionscore']
                 cur.execute(f'INSERT INTO questionresults(id, rid, eqid, score) VALUES (null, {rid}, {eqid}, {qscore})')
+                mysql.connection.commit()
             resultIDs.append({'examattemptID':eaid, 'resultID':rid})
         return jsonify(resultIDs), 200
     else:
