@@ -26,7 +26,7 @@ def score_exams_attempts():
                 cur.execute(f'INSERT INTO questionresults(id, rid, eqid, score) VALUES (null, {rid}, {eqid}, {qscore})')
                 mysql.connection.commit()
             resultIDs.append({'examattemptID':eaid, 'resultID':rid})
-            cur.execute(f'UPDATE examattempts SET graded=1 WHERE eaid={eaid}')
+            cur.execute(f'UPDATE examattempts SET graded=1 WHERE id={eaid}')
             mysql.connection.commit()
         return jsonify(resultIDs), 200
     else:
