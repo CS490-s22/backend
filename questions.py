@@ -42,7 +42,7 @@ def insert_new_question():
         madeby = req['professorID']
         testcases = req['testCases']
 
-        rows_affected = cur.execute("""INSERT INTO questions(id, title, topics, question, difficulty, madeby) VALUES(null,%s, %s, %s, %s, %s, )""",(title,topic,question,difficulty,madeby))
+        rows_affected = cur.execute("""INSERT INTO questions(id, title, topics, question, difficulty, madeby) VALUES(null,%s, %s, %s, %s, %s)""",(title,topic,question,difficulty,madeby))
         mysql.connection.commit()
         logging.warn("ROWS INSERTED INTO QUESTIONS: %d", rows_affected)
 
