@@ -53,7 +53,7 @@ def retreive_exams():
                 sid = req['studentID']
                 rows = cur.execute("SELECT DISTINCT(e.id), e.name AS name, e.details AS details, e.madeby AS madeby, e.points AS points, e.open AS open, e.released AS released "
                                     "FROM exams AS e, examattempts "
-                                    f"WHERE e.id=examattempts.eid AND examattempts.sid = {sid} AND e.released = 1;")
+                                    f"WHERE e.id=examattempts.eid AND examattempts.sid = {sid} AND e.released = 1 AND examattempts.graded = 1;")
             else:
                 rows = cur.execute(f"SELECT * FROM exams WHERE open = 1 ORDER BY id DESC")
         else:
