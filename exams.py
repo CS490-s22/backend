@@ -49,7 +49,14 @@ def retreive_exams():
         role = req['role']
         if role == "Student":
             stype = req['statustype']
-            rows = cur.execute(f"SELECT * FROM exams WHERE {stype} = 1 ORDER BY id DESC")
+            if stype == "released":
+                sid = req['studentID']
+                rows = cur.execute("SELECT DISTINCT(e.id), e.name AS name, e.details AS details, e.madeby AS madeby, e.points AS points, e.open AS open, e.released AS released"
+                                    "FROM exams AS e, examattempts"
+                                    f"WHERE e.id=examattempts.eid AND examattempts.sid = {sid} AND e.released = 1;")
+            else:
+                rows = cur.execute(f"SELECT * FROM exams WHERE open = 1 ORDER BY id DESC")
+            
         else:
             rows = cur.execute("SELECT exams.*, COUNT(examattempts.eid) AS attempts FROM exams LEFT JOIN examattempts ON exams.id = examattempts.eid GROUP BY exams.id;")
         if rows > 0:
