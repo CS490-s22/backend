@@ -98,6 +98,26 @@ def change_exam_status():
     else:
         return jsonify(error="JSON FORMAT REQUIRED"), 400
 
+@exams.route('/change_release_status', methods=['POST'])
+@cross_origin(allow_headers=['Content-Type'])
+def change_release_status():
+    logging.getLogger('flask_cors').level = logging.DEBUG
+    cur = mysql.connection.cursor()
+
+    content_type = request.headers.get("Content-Type")
+    if content_type == 'application/json':
+        req = request.json
+        examID = req['examID']
+        released = req['status']
+        try:
+            cur.execute('UPDATE exams SET released = {} WHERE id = {}'.format(released, examID))
+            mysql.connection.commit()
+            return jsonify(resonse=f"RELEASE STATUS FOR EXAM {examID}: {released}"), 200
+        except:
+            return jsonify(error="QUERY ERROR"), 400
+    else:
+        return jsonify(error="JSON FORMAT REQUIRED"), 400
+
 @exams.route('/submit_exam_attempt', methods=['POST'])
 def submit_exam_attempt():
     cur = mysql.connection.cursor()
