@@ -50,7 +50,7 @@ def retreive_exams():
         if role == "Student":
             rows = cur.execute("SELECT * FROM exams WHERE open = 1 ORDER BY id DESC")
         else:
-            rows = cur.execute("SELECT * FROM exams ORDER BY id DESC")
+            rows = cur.execute("SELECT exams.*, COUNT(examattempts.eid) AS attempts FROM exams LEFT JOIN examattempts ON exams.id = examattempts.eid GROUP BY exams.id;")
         if rows > 0:
             result = cur.fetchall()
             return jsonify(result)
@@ -133,10 +133,13 @@ def retrieve_exam_attempt():
     if content_type == 'application/json':
         req = request.json
         eid = req['examID']
+        rows = cur.execute(f'SELECT * FROM exams WHERE id={eid}')
+        if rows == 0:
+            return jsonify(error="EXAM ID NOT VALID")
         rows = cur.execute(f'SELECT id AS eaid, sid FROM examattempts WHERE eid={eid}')
         if rows > 0:
             examattempts = cur.fetchall()
-            rows = cur.execute(f'SELECT id AS eqid, qid FROM examquestions WHERE eid={eid}')
+            rows = cur.execute(f'SELECT id AS eqid, qid, points FROM examquestions WHERE eid={eid}')
             examquestions= cur.fetchall()
             attempts = list()
             for attempt in examattempts:
@@ -144,6 +147,7 @@ def retrieve_exam_attempt():
                 sid = attempt['sid']
                 questions = list()
                 for eq in examquestions:
+                    points = eq['points']
                     qid = eq['qid']
                     eqid = eq['eqid']
                     rows = cur.execute(f'SELECT answer FROM examattemptanswers WHERE eaid = {eaid} AND eqid={eqid}')
@@ -153,7 +157,7 @@ def retrieve_exam_attempt():
                     cases = list()
                     for case in testcases:
                         cases.append({'functionCall': case['input'], 'expectedOutput':case['output'], 'type': case['outputtype']})
-                    questions.append({'examquestionID':eqid, 'testcases':cases, 'response': ans})
+                    questions.append({'examquestionID':eqid, 'points':points, 'testcases':cases, 'response': ans.decode("utf-8")})
                 attempts.append({"studentID": sid, "examattemptID": eaid, "questions":questions})
             return jsonify(attempts)
         else:
