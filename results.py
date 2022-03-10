@@ -28,3 +28,61 @@ def score_exams_attempts():
         return jsonify(resultIDs), 200
     else:
         return jsonify(error="JSON FORMAT REQUIRED"), 400
+
+@results.route('/view_results', methods=['POST'])
+def retrieve_exam_results():
+    cur = mysql.connection.cursor()
+    content_type = request.headers.get("Content-Type")
+    if content_type == 'application/json':
+        req = request.json
+        eid = req['examID']
+        rows = cur.execute(f'SELECT id, name, points FROM exams WHERE id={eid}')
+        if rows == 0:
+            return jsonify(error="EXAM ID NOT VALID")
+        exam = cur.fetchall()[0]
+        examname = exam['name']
+        maxexamscore = exam['points']
+        rows = cur.execute(f'SELECT id AS eaid, sid FROM examattempts WHERE eid={eid}')
+        if rows > 0:
+            examattempts = cur.fetchall()
+            rows = cur.execute(f'SELECT id AS eqid, qid, points FROM examquestions WHERE eid={eid}')
+            examquestions= cur.fetchall()
+            attempts = list()
+            for attempt in examattempts:
+                eaid = attempt['eaid']
+                sid = attempt['sid']
+                cur.execute(f'SELECT firstname, lastname FROM students WHERE id={sid}')
+                student = cur.fetchall()[0]
+                fname = student['firstname']
+                lname = student['lastname']
+                cur.execuate(f'SELECT id, score FROM results WHERE eaid={eaid} ORDER BY id DESC')
+                result = cur.fetchall()[0]
+                rid = result['id']
+                attemptscore = result['score']
+                questions = list()
+                for eq in examquestions:
+                    maxpoints = eq['points']
+                    qid = eq['qid']
+                    eqid = eq['eqid']
+                    cur.execute(f'SELECT title, question FROM questions WHERE qid={qid}')
+                    q = cur.fetchall()[0]
+                    qtitle = q['title']
+                    qq = q['question']
+                    cur.execute(f'SELECT answer FROM examattemptanswers WHERE eaid = {eaid} AND eqid={eqid}')
+                    ans = cur.fetchall()[0]['answer']
+                    cur.execute(f'SELECT qrid, score FROM questionsresults WHERE rid={rid} AND eqid={eqid}')
+                    qresult = cur.fetchall()[0]
+                    qscore = qresult['score']
+                    qrid = qresult['qrid']
+                    cur.execute(f"SELECT com AS 'comment' FROM qresultcomments WHERE {qrid}")
+                    qcomments = cur.fetchall()
+                    comments = list()
+                    for comment in qcomments:
+                        comments.append(comment['com'])
+                    questions.append({'examquestionID':eqid, 'title':qtitle, 'questions':qq, 'qscore':qscore, 'maxpoints':maxpoints, 'response': ans.decode("utf-8"), 'comments':comments})
+                attempts.append({"studentID": sid, 'fname':fname, 'lname':lname, "examattemptID": eaid, "resultID":rid, 'score':attemptscore, "questions":questions})
+            return jsonify({'examname':examname,'maxexampoints':maxexamscore,'examattempts':attempts})
+        else:
+            return jsonify(error="NO SUBMISSIONS FOR THIS EXAM")
+    else:
+        return jsonify(error="JSON FORMAT REQUIRED"), 400
