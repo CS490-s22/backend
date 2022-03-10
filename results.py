@@ -64,7 +64,7 @@ def retrieve_exam_results():
                     maxpoints = eq['points']
                     qid = eq['qid']
                     eqid = eq['eqid']
-                    cur.execute(f'SELECT title, question FROM questions WHERE qid={qid}')
+                    cur.execute(f'SELECT title, question FROM questions WHERE id={qid}')
                     q = cur.fetchall()[0]
                     qtitle = q['title']
                     qq = q['question']
