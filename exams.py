@@ -136,7 +136,7 @@ def retrieve_exam_attempt():
         rows = cur.execute(f'SELECT * FROM exams WHERE id={eid}')
         if rows == 0:
             return jsonify(error="EXAM ID NOT VALID")
-        rows = cur.execute(f'SELECT id AS eaid, sid FROM examattempts WHERE eid={eid}')
+        rows = cur.execute(f'SELECT id AS eaid, sid FROM examattempts WHERE eid={eid} AND graded=0')
         if rows > 0:
             examattempts = cur.fetchall()
             rows = cur.execute(f'SELECT id AS eqid, qid, points FROM examquestions WHERE eid={eid}')
@@ -161,6 +161,6 @@ def retrieve_exam_attempt():
                 attempts.append({"studentID": sid, "examattemptID": eaid, "questions":questions})
             return jsonify(attempts), 200
         else:
-            return jsonify(error="NO SUBMISSIONS FOR THIS EXAM"), 400
+            return jsonify(error="NO NEW/UNGRADED SUBMISSIONS FOR THIS EXAM"), 400
     else:
         return jsonify(error="JSON FORMAT REQUIRED"), 400

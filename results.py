@@ -26,6 +26,8 @@ def score_exams_attempts():
                 cur.execute(f'INSERT INTO questionresults(id, rid, eqid, score) VALUES (null, {rid}, {eqid}, {qscore})')
                 mysql.connection.commit()
             resultIDs.append({'examattemptID':eaid, 'resultID':rid})
+            cur.execute(f'UPDATE examattempts SET graded=1 WHERE eaid={eaid}')
+            mysql.connection.commit()
         return jsonify(resultIDs), 200
     else:
         return jsonify(error="JSON FORMAT REQUIRED"), 400
@@ -128,7 +130,7 @@ def retrieve_exam_result():
                 qresult = cur.fetchall()[0]
                 qscore = qresult['score']
                 comment = qresult['remark']
-                questions.append({'examquestionID':eqid, 'title':qtitle, 'questions':qq, 'qscore':qscore, 'maxpoints':maxpoints, 'response': ans.decode("utf-8"), 'comments':comment})
+                questions.append({'examquestionID':eqid, 'title':qtitle, 'question':qq, 'qscore':qscore, 'maxpoints':maxpoints, 'response': ans.decode("utf-8"), 'comments':comment})
             attempt = {"studentID": sid, 'fname':fname, 'lname':lname, "examattemptID": eaid, "resultID":rid, 'score':attemptscore, "questions":questions}
             return jsonify({'examname':examname,'maxexampoints':maxexamscore,'examattempt':attempt}), 200
         else:
