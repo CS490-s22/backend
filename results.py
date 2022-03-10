@@ -152,7 +152,7 @@ def edit_result():
             comment = q['comment']
             score = q['score']
             examscore += score
-            cur.execute(f'UPDATE questionresults SET score={score} remark={comment} WHERE rid ={rid} AND eqid={eqid}')
+            cur.execute(f'UPDATE questionresults SET score={score}, remark={comment} WHERE rid ={rid} AND eqid={eqid}')
             mysql.connection.commit()
         cur.execute(f'UPDATE results SET score={examscore} WHERE id ={rid}')
         mysql.connection.commit()
