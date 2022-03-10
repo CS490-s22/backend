@@ -55,7 +55,7 @@ def retrieve_exam_results():
                 student = cur.fetchall()[0]
                 fname = student['firstname']
                 lname = student['lastname']
-                cur.execuate(f'SELECT id, score FROM results WHERE eaid={eaid} ORDER BY id DESC')
+                cur.execute(f'SELECT id, score FROM results WHERE eaid={eaid} ORDER BY id DESC')
                 result = cur.fetchall()[0]
                 rid = result['id']
                 attemptscore = result['score']
