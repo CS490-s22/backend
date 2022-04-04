@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, current_app as app
 from flask_cors import cross_origin
 from database import mysql
-import logging
+import logging, math
 
 exams = Blueprint("exams",__name__)
 
@@ -24,18 +24,45 @@ def create_new_exam():
         for q in questions:
             totalpoints += int(q['points'])
 
-        rows = cur.execute("INSERT INTO exams(id, name, details, madeby, points) VALUES(null,\"{}\",\"{}\",\"{}\",{})".format(name, details, madeby, totalpoints))
+        cur.execute("""INSERT INTO exams(id, name, details, madeby, points) 
+                       VALUES(null, %s, %s, %s, %s)""",(name, details, madeby, totalpoints))
         mysql.connection.commit()
-        logging.warn("ROWS INSERTED INTO Exams: %d", rows)
-
-        cur.execute("SELECT MAX(id) AS id FROM exams")
+        cur.execute("""SELECT MAX(id) AS id 
+                       FROM exams
+                       WHERE madeby = %s""",(madeby))
         eid = cur.fetchall()[0]['id']
+
         for q in questions:
             qid = q['questionID']
             points = q['points']
-            cur.execute("INSERT INTO examquestions(id, eid, qid, points) VALUES(null, {}, {}, {})".format(eid, qid, points))
+            qmaxgrade = 1.0
+            cur.execute("""INSERT INTO examquestions(id, eid, qid, points)
+                           VALUES(null, {}, {}, {})""",(eid, qid, points))
             mysql.connection.commit()
-
+            cur.execute("""SELECT MAX(id) AS id 
+                           FROM exams""")
+            eqid = cur.fetchall()[0]['id']
+            rows = cur.execute("""SELECT id, criteriatable AS ct
+                           FROM gradabaleitems
+                           WHERE qid = %s""",(qid))
+            rows = cur.fetchall()
+            ntcc = 0
+            for gradeable in rows:
+                gid = gradeable['id']
+                if gradeable['ct'] == 'namecriteria':
+                    gmaxgrade = 0.1 * points
+                    qmaxgrade -= 0.1
+                    ntcc += 1
+                elif gradeable['ct'] == 'constraints':
+                    gmaxgrade = 0.1 * points
+                    qmaxgrade -= 0.1
+                    ntcc += 1
+                else:
+                    gmaxgrade = math.floor(((qmaxgrade * points) / (len(gradeable)-ntcc)) * 100) / 100
+                
+                cur.execute("""INSERT INTO examgradableitems(id, eqid, gid, points)
+                               VALUES(null, %s, %s, %s)""",(eqid, gid, gmaxgrade))
+                mysql.connection.commit()
         return jsonify(examID=eid), 201
     else:
         return jsonify(error="JSON FORMAT REQUIRED"), 400
@@ -51,13 +78,19 @@ def retreive_exams():
             stype = req['statustype']
             if stype == "released":
                 sid = req['studentID']
-                rows = cur.execute("SELECT DISTINCT(e.id), e.name AS name, e.details AS details, e.madeby AS madeby, e.points AS points, e.open AS open, e.released AS released "
-                                    "FROM exams AS e, examattempts "
-                                    f"WHERE e.id=examattempts.eid AND examattempts.sid = {sid} AND e.released = 1 AND examattempts.graded = 1;")
+                rows = cur.execute("""SELECT DISTINCT(e.id), e.name AS name, e.details AS details, e.madeby AS madeby, e.points AS points, e.open AS open, e.released AS released 
+                                      FROM exams AS e, examattempts
+                                      WHERE e.id=examattempts.eid AND examattempts.sid = %s AND e.released = 1 AND examattempts.graded = 1""",(sid))
             else:
-                rows = cur.execute(f"SELECT * FROM exams WHERE open = 1 ORDER BY id DESC")
+                rows = cur.execute("""SELECT * 
+                                      FROM exams 
+                                      WHERE open = 1 
+                                      ORDER BY id DESC""")
         else:
-            rows = cur.execute("SELECT exams.*, COUNT(examattempts.eid) AS attempts FROM exams LEFT JOIN examattempts ON exams.id = examattempts.eid GROUP BY exams.id;")
+            rows = cur.execute("""SELECT exams.*, COUNT(examattempts.eid) AS attempts 
+                                  FROM exams LEFT JOIN examattempts 
+                                  ON exams.id = examattempts.eid 
+                                  GROUP BY exams.id;""")
         if rows > 0:
             result = cur.fetchall()
             return jsonify(result)
@@ -74,7 +107,9 @@ def check_exam_status():
     if content_type == 'application/json':
         req = request.json
         examID = req['examID']
-        rows = cur.execute('SELECT open FROM exams WHERE id = {}'.format(examID))
+        rows = cur.execute("""SELECT open 
+                              FROM exams 
+                              WHERE id = %s""",(examID))
 
         if rows > 0:
             result = cur.fetchall()[0]['open']
@@ -97,7 +132,9 @@ def change_exam_status():
         examID = req['examID']
         status = req['status']
         try:
-            cur.execute('UPDATE exams SET open = {} WHERE id = {}'.format(status, examID))
+            cur.execute("""UPDATE exams 
+                           SET open = %s 
+                           WHERE id = %s""",(status, examID))
             mysql.connection.commit()
             return jsonify(resonse="STATUS CHANGED!"), 200
         except:
@@ -117,7 +154,9 @@ def change_release_status():
         examID = req['examID']
         released = req['status']
         try:
-            cur.execute('UPDATE exams SET released = {} WHERE id = {}'.format(released, examID))
+            cur.execute("""UPDATE exams 
+                           SET released = %s 
+                           WHERE id = %s""",(released, examID))
             mysql.connection.commit()
             return jsonify(resonse=f"RELEASE STATUS FOR EXAM {examID}: {released}"), 200
         except:
@@ -136,15 +175,20 @@ def submit_exam_attempt():
         sid = req['studentID']
         pid = req['professorID']
         answers = req['answers']
-        cur.execute(f'INSERT INTO examattempts(id, sid, pid, eid) VALUES (null, {sid}, {pid}, {eid})')
+        cur.execute("""INSERT INTO examattempts(id, sid, pid, eid) 
+                       VALUES (null, %s, %s, %s)""", (sid, pid, eid))
         mysql.connection.commit()
-        rows = cur.execute(f'SELECT id FROM examattempts WHERE sid={sid} AND pid={pid} AND eid={eid} ORDER BY id DESC LIMIT 1')
+        rows = cur.execute("""SELECT id 
+                              FROM examattempts 
+                              WHERE sid=%s AND pid=%s AND eid=%s 
+                              ORDER BY id DESC LIMIT 1""",(sid, pid, eid))
         if rows > 0:
             eaid = cur.fetchall()[0]['id']
             for answer in answers:
                 eqid = answer['eqid']
                 response = answer['answer']
-                cur.execute("""INSERT INTO examattemptanswers(id, eqid, eaid, answer) VALUES (null, %s, %s, %s)""", (eqid, eaid, response))
+                cur.execute("""INSERT INTO examattemptanswers(id, eqid, eaid, answer) 
+                               VALUES (null, %s, %s, %s)""", (eqid, eaid, response))
                 mysql.connection.commit()
             return jsonify(examattemptID=eaid), 200
         else:
@@ -153,20 +197,26 @@ def submit_exam_attempt():
         return jsonify(error="JSON FORMAT REQUIRED"), 400
 
 @exams.route('/exam_attempts', methods=['POST'])
-def retrieve_exam_attempt():
+def retrieve_exam_attempts_for_grading():
     cur = mysql.connection.cursor()
 
     content_type = request.headers.get("Content-Type")
     if content_type == 'application/json':
         req = request.json
         eid = req['examID']
-        rows = cur.execute(f'SELECT * FROM exams WHERE id={eid}')
+        rows = cur.execute("""SELECT * 
+                              FROM exams 
+                              WHERE id=%s""",(eid))
         if rows == 0:
             return jsonify(error="EXAM ID NOT VALID")
-        rows = cur.execute(f'SELECT id AS eaid, sid FROM examattempts WHERE eid={eid} AND graded=0')
+        rows = cur.execute("""SELECT id AS eaid, sid 
+                              FROM examattempts 
+                              WHERE eid = %s AND graded = 0""",(eid))
         if rows > 0:
             examattempts = cur.fetchall()
-            rows = cur.execute(f'SELECT id AS eqid, qid, points FROM examquestions WHERE eid={eid}')
+            rows = cur.execute("""SELECT id AS eqid, qid, points 
+                                  FROM examquestions 
+                                  WHERE eid = %s""",(eid))
             examquestions= cur.fetchall()
             attempts = list()
             for attempt in examattempts:
@@ -177,9 +227,13 @@ def retrieve_exam_attempt():
                     points = eq['points']
                     qid = eq['qid']
                     eqid = eq['eqid']
-                    rows = cur.execute(f'SELECT answer FROM examattemptanswers WHERE eaid = {eaid} AND eqid={eqid}')
+                    rows = cur.execute("""SELECT answer 
+                                          FROM examattemptanswers 
+                                          WHERE eaid = %s AND eqid = %s""",(eaid, eqid))
                     ans = cur.fetchall()[0]['answer']
-                    rows = cur.execute(f'SELECT input, output, outputtype FROM testcases WHERE qid={qid}')
+                    rows = cur.execute("""SELECT input, output, outputtype 
+                                          FROM testcases 
+                                          WHERE qid = %s""",(qid))
                     testcases = cur.fetchall()
                     cases = list()
                     for case in testcases:
@@ -191,3 +245,26 @@ def retrieve_exam_attempt():
             return jsonify(list()), 200
     else:
         return jsonify(error="JSON FORMAT REQUIRED"), 400
+
+@exams.route('/retrieve_exam_attempts', methods=['POST'])
+def retrieve_exam_attempts():
+    cur = mysql.connection.cursor()
+    content_type = request.headers.get("Content-Type")
+    if content_type == 'application/json':
+        req = request.json
+        eid = req['examID']
+        rows = cur.execute("""SELECT * 
+                              FROM exams 
+                              WHERE id = %s""",(eid))
+        if rows == 0:
+            return jsonify(error="INVALID EXAM ID")
+        rows = cur.execute("""SELECT * 
+                              FROM examattempts 
+                              WHERE eid = %s""",(eid))
+        if rows > 0:
+            res = cur.fetchall()
+            return jsonify(res), 200
+        else:
+            return jsonify(error="NO ATTEMPTS WERE MADE FOR THIS EXAM"), 400
+    else:
+        return jsonify(error="RECEIVED DATA ISN'T IN JSON FORMAT"), 400
