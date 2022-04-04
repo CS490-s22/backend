@@ -40,9 +40,10 @@ def create_new_exam():
                            VALUES(null, {}, {}, {})""",(eid, qid, points))
             mysql.connection.commit()
             cur.execute("""SELECT MAX(id) AS id 
-                           FROM exams""")
+                           FROM examquestions
+                           WHERE eid = %s AND qid = %s""", (eid, qid))
             eqid = cur.fetchall()[0]['id']
-            rows = cur.execute("""SELECT id, criteriatable AS ct
+            cur.execute("""SELECT id, criteriatable AS ct
                            FROM gradabaleitems
                            WHERE qid = %s""",(qid))
             rows = cur.fetchall()
@@ -196,6 +197,7 @@ def submit_exam_attempt():
     else:
         return jsonify(error="JSON FORMAT REQUIRED"), 400
 
+#-----------
 @exams.route('/exam_attempts', methods=['POST'])
 def retrieve_exam_attempts_for_grading():
     cur = mysql.connection.cursor()
@@ -208,7 +210,7 @@ def retrieve_exam_attempts_for_grading():
                               FROM exams 
                               WHERE id=%s""",(eid))
         if rows == 0:
-            return jsonify(error="EXAM ID NOT VALID")
+            return jsonify(error="EXAM ID NOT VALID"), 400
         rows = cur.execute("""SELECT id AS eaid, sid 
                               FROM examattempts 
                               WHERE eid = %s AND graded = 0""",(eid))
@@ -231,14 +233,37 @@ def retrieve_exam_attempts_for_grading():
                                           FROM examattemptanswers 
                                           WHERE eaid = %s AND eqid = %s""",(eaid, eqid))
                     ans = cur.fetchall()[0]['answer']
-                    rows = cur.execute("""SELECT input, output, outputtype 
-                                          FROM testcases 
+                    rows = cur.execute("""SELECT id, criteriatable AS ct
+                                          FROM gradableitems
                                           WHERE qid = %s""",(qid))
-                    testcases = cur.fetchall()
-                    cases = list()
-                    for case in testcases:
-                        cases.append({'functionCall': case['input'], 'expectedOutput':case['output'], 'type': case['outputtype']})
-                    questions.append({'examquestionID':eqid, 'points':points, 'testcases':cases, 'response': ans.decode("utf-8")})
+                    gradables = cur.fetchall()
+                    glist = list()
+                    for g in gradables:
+                        ct = g['ct']
+                        gid = g['id']
+                        if ct == 'namecriteria':
+                            gtype = 'name'
+                            cur.execute("""SELECT fname 
+                                           FROM namecriteria
+                                           WHERE gid = %s""",(gid))
+                            name = cur.fetchall()[0]['fname']
+                            glist.append({'gradableID': gid, 'type': gtype, 'name': name})
+                        elif ct == 'constraints':
+                            gtype = "constraint"
+                            cur.execute("""SELECT ctype
+                                           FROM constraints
+                                           WHERE gid = %s""", (gid))
+                            ctype = cur.fetchall()[0]['ctype']
+                            glist.append({'gradableID': gid, 'type': gtype, 'Constraint':ctype})
+                        else:
+                            gtype = "testcase"
+                            rows = cur.execute("""SELECT input, output, outputtype 
+                                                  FROM testcase 
+                                                  WHERE gid = %s""",(gid))
+                            testcase = cur.fetchall()
+                            glist.append({'gradableID': gid, 'type': gtype, 'case': {'functionCall': testcase['input'], 'expectedOutput': testcase['output'], 'type': testcase['outputtype']}})
+
+                    questions.append({'examquestionID':eqid, 'points':points, 'gradables':glist, 'response': ans.decode("utf-8")})
                 attempts.append({"studentID": sid, "examattemptID": eaid, "questions":questions})
             return jsonify(attempts), 200
         else:

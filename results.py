@@ -17,7 +17,7 @@ def score_exams_attempts():
             escore = attempt['score']
             cur.execute(f'INSERT INTO results(id, eaid, score) VALUES (null, {eaid}, {escore})')
             mysql.connection.commit()
-            cur.execute(f'SELECT id FROM results WHERE eaid={eaid} ORDER BY id DESC')
+            cur.execute(f'SELECT MAX(id) AS id FROM results WHERE eaid={eaid} ORDER BY id DESC')
             rid = cur.fetchall()[0]['id']
             questions = attempt['questionresults']
             for question in questions:

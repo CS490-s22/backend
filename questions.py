@@ -48,62 +48,57 @@ def insert_new_question():
         testcases = req['testCases']
         constraint = req['constraint']
 
+        call = testcases[0]['functionCall']
+        funcname = call[0:call.find('(')]
+
         #question
-        rows_affected = cur.execute("""INSERT INTO questions(id, title, topics, question, difficulty, madeby)
+        cur.execute("""INSERT INTO questions(id, title, topics, question, difficulty, madeby)
                                        VALUES(null,%s, %s, %s, %s, %s)""",(title, topic, question, difficulty, madeby))
         mysql.connection.commit()
         cur.execute("""SELECT MAX(id) as id 
                        FROM questions 
-                       WHERE professorID = %s""",
-                       (pid))
+                       WHERE professorID = %s""",(pid))
         qid = cur.fetchall()[0]['id']
 
         #namecriteria
         cur.execute("""INSERT INTO gradableitems(id, qid, criteriatable)
-                       VALUES (null, %s, %s)""",
-                       (qid, "namecriteria"))
+                       VALUES (null, %s, %s)""",(qid, "namecriteria"))
         mysql.connection.commit()
         cur.execute("""SELECT MAX(id) as id
                        FROM gradableitems 
-                       WHERE qid = %s""",
-                       (qid))
+                       WHERE qid = %s""",(qid))
         gid = cur.fetchall()[0]['id']
         cur.execute("""INSERT INTO namecriteria(id, gid, fname)
-                       VALUES(null, %s, %s)""",(gid, "placeholder")) #NAME OF FUNCTION ------------
+                       VALUES(null, %s, %s)""",(gid, funcname)) 
         mysql.connection.commit()
 
         #constraint
-        if constraint != "None" or constraint != "none":
+        if constraint != "None" and constraint != "none":
             cur.execute("""INSERT INTO gradableitems(id, qid, criteriatable)
-                        VALUES (null, %s, %s)""",
-                        (qid, "constraints"))
+                        VALUES (null, %s, %s)""",(qid, "constraints"))
             mysql.connection.commit()
             cur.execute("""SELECT MAX(id) as id
                         FROM gradableitems 
-                        WHERE qid = %s""",
-                        (qid))
+                        WHERE qid = %s""",(qid))
             gid = cur.fetchall()[0]['id']
             cur.execute("""INSERT INTO constraints(id, gid, ctype)
-                        VALUES(null, %s, %s)""",
-                        (gid, constraint)) 
+                        VALUES(null, %s, %s)""",(gid, constraint)) 
             mysql.connection.commit()
-        #testcases ---------------
+
+        #testcases 
         for case in testcases:
             caseI = case['functionCall']
             caseO = case['expectedOutput']
             output_type = case['type']
             cur.execute("""INSERT INTO gradableitems(id, qid, criteriatable, maxscore)
-                           VALUES (null, %s, %s, %s)""",
-                           (qid, "testcase", 0))
+                           VALUES (null, %s, %s, %s)""",(qid, "testcase", 0))
             mysql.connection.commit()
             cur.execute("""SELECT MAX(id) as id
                            FROM gradableitems 
-                           WHERE qid = %s""",
-                           (qid))
+                           WHERE qid = %s""",(qid))
             gid = cur.fetchall()[0]['id']
-            cur.execute("""INSERT INTO testcases(id, gid, input, output, outputtype)
-                           VALUES(null, %s, %s, %s, %s)""",
-                           (gid, caseI, caseO, output_type))
+            cur.execute("""INSERT INTO testcase(id, gid, input, output, outputtype)
+                           VALUES(null, %s, %s, %s, %s)""",(gid, caseI, caseO, output_type))
             mysql.connection.commit()
         
         return jsonify(questionID = qid), 201
@@ -141,11 +136,11 @@ def retrieve_test_cases():
 
     if rows > 0:
         cases = list()
-        res = cur.fetchall()
-        for row in res:
+        rows = cur.fetchall()
+        for row in rows:
             gid = row['id']
             rows = cur.execute("""SELECT input AS functionCall, output AS expectedOutput, outputtype AS type 
-                                  FROM testcases WHERE gid = %s""",(gid))
+                                  FROM testcase WHERE gid = %s""",(gid))
             cases.append(cur.fetchall()[0])
         return jsonify(cases), 200
     else:
