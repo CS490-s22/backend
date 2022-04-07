@@ -29,13 +29,12 @@ def create_new_exam():
         mysql.connection.commit()
         cur.execute("""SELECT MAX(id) AS id 
                        FROM exams
-                       WHERE madeby = %s""",(madeby))
+                       WHERE madeby = %s""",(madeby,))
         eid = cur.fetchall()[0]['id']
 
         for q in questions:
             qid = q['questionID']
             points = q['points']
-            qmaxgrade = 1.0
             cur.execute("""INSERT INTO examquestions(id, eid, qid, points)
                            VALUES(null, {}, {}, {})""",(eid, qid, points))
             mysql.connection.commit()
@@ -45,21 +44,23 @@ def create_new_exam():
             eqid = cur.fetchall()[0]['id']
             cur.execute("""SELECT id, criteriatable AS ct
                            FROM gradabaleitems
-                           WHERE qid = %s""",(qid))
+                           WHERE qid = %s""",(qid,))
             rows = cur.fetchall()
             ntcc = 0
             for gradeable in rows:
                 gid = gradeable['id']
                 if gradeable['ct'] == 'namecriteria':
                     gmaxgrade = 0.1 * points
-                    qmaxgrade -= 0.1
-                    ntcc += 1
+                    ntcc+=1
                 elif gradeable['ct'] == 'constraints':
                     gmaxgrade = 0.1 * points
-                    qmaxgrade -= 0.1
-                    ntcc += 1
+                    ntcc+=1
                 else:
-                    gmaxgrade = math.floor(((qmaxgrade * points) / (len(gradeable)-ntcc)) * 100) / 100
+                    gmaxgrade =  round(((1.0 - (0.1 * ntcc)) * points) / (len(rows)-ntcc),2)
+                    if ntcc != 0:
+                        leftover = 1.0 - round(gmaxgrade * 3, 2)
+                        gmaxgrade += leftover
+                        ntcc = 0
                 
                 cur.execute("""INSERT INTO examgradableitems(id, eqid, gid, points)
                                VALUES(null, %s, %s, %s)""",(eqid, gid, gmaxgrade))
@@ -81,7 +82,7 @@ def retreive_exams():
                 sid = req['studentID']
                 rows = cur.execute("""SELECT DISTINCT(e.id), e.name AS name, e.details AS details, e.madeby AS madeby, e.points AS points, e.open AS open, e.released AS released 
                                       FROM exams AS e, examattempts
-                                      WHERE e.id=examattempts.eid AND examattempts.sid = %s AND e.released = 1 AND examattempts.graded = 1""",(sid))
+                                      WHERE e.id=examattempts.eid AND examattempts.sid = %s AND e.released = 1 AND examattempts.graded = 1""",(sid,))
             else:
                 rows = cur.execute("""SELECT * 
                                       FROM exams 
@@ -110,11 +111,10 @@ def check_exam_status():
         examID = req['examID']
         rows = cur.execute("""SELECT open 
                               FROM exams 
-                              WHERE id = %s""",(examID))
+                              WHERE id = %s""",(examID,))
 
         if rows > 0:
             result = cur.fetchall()[0]['open']
-
             return jsonify(open=bool(result)), 200
         else:
             return jsonify(error="NO SUCH EXAM ID FOUND"), 400
@@ -208,17 +208,17 @@ def retrieve_exam_attempts_for_grading():
         eid = req['examID']
         rows = cur.execute("""SELECT * 
                               FROM exams 
-                              WHERE id=%s""",(eid))
+                              WHERE id=%s""",(eid,))
         if rows == 0:
             return jsonify(error="EXAM ID NOT VALID"), 400
         rows = cur.execute("""SELECT id AS eaid, sid 
                               FROM examattempts 
-                              WHERE eid = %s AND graded = 0""",(eid))
+                              WHERE eid = %s AND graded = 0""",(eid,))
         if rows > 0:
             examattempts = cur.fetchall()
             rows = cur.execute("""SELECT id AS eqid, qid, points 
                                   FROM examquestions 
-                                  WHERE eid = %s""",(eid))
+                                  WHERE eid = %s""",(eid,))
             examquestions= cur.fetchall()
             attempts = list()
             for attempt in examattempts:
@@ -235,33 +235,37 @@ def retrieve_exam_attempts_for_grading():
                     ans = cur.fetchall()[0]['answer']
                     rows = cur.execute("""SELECT id, criteriatable AS ct
                                           FROM gradableitems
-                                          WHERE qid = %s""",(qid))
+                                          WHERE qid = %s""",(qid,))
                     gradables = cur.fetchall()
                     glist = list()
                     for g in gradables:
                         ct = g['ct']
                         gid = g['id']
+                        cur.execute("""SELECT fname 
+                                           FROM examgradableitems
+                                           WHERE eqid = %s AND gid = %s""",(eqid, gid))
+                        maxgrade = cur.fetchall()[0]['points']
                         if ct == 'namecriteria':
                             gtype = 'name'
                             cur.execute("""SELECT fname 
                                            FROM namecriteria
-                                           WHERE gid = %s""",(gid))
+                                           WHERE gid = %s""",(gid,))
                             name = cur.fetchall()[0]['fname']
                             glist.append({'gradableID': gid, 'type': gtype, 'name': name})
                         elif ct == 'constraints':
                             gtype = "constraint"
                             cur.execute("""SELECT ctype
                                            FROM constraints
-                                           WHERE gid = %s""", (gid))
+                                           WHERE gid = %s""", (gid,))
                             ctype = cur.fetchall()[0]['ctype']
                             glist.append({'gradableID': gid, 'type': gtype, 'Constraint':ctype})
                         else:
                             gtype = "testcase"
                             rows = cur.execute("""SELECT input, output, outputtype 
                                                   FROM testcase 
-                                                  WHERE gid = %s""",(gid))
+                                                  WHERE gid = %s""",(gid,))
                             testcase = cur.fetchall()
-                            glist.append({'gradableID': gid, 'type': gtype, 'case': {'functionCall': testcase['input'], 'expectedOutput': testcase['output'], 'type': testcase['outputtype']}})
+                            glist.append({'gradableID': gid, 'maxgrade': maxgrade, 'type': gtype, 'case': {'functionCall': testcase['input'], 'expectedOutput': testcase['output'], 'type': testcase['outputtype']}})
 
                     questions.append({'examquestionID':eqid, 'points':points, 'gradables':glist, 'response': ans.decode("utf-8")})
                 attempts.append({"studentID": sid, "examattemptID": eaid, "questions":questions})
@@ -280,12 +284,12 @@ def retrieve_exam_attempts():
         eid = req['examID']
         rows = cur.execute("""SELECT * 
                               FROM exams 
-                              WHERE id = %s""",(eid))
+                              WHERE id = %s""",(eid,))
         if rows == 0:
             return jsonify(error="INVALID EXAM ID")
         rows = cur.execute("""SELECT * 
                               FROM examattempts 
-                              WHERE eid = %s""",(eid))
+                              WHERE eid = %s""",(eid,))
         if rows > 0:
             res = cur.fetchall()
             return jsonify(res), 200

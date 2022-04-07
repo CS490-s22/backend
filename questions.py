@@ -22,7 +22,7 @@ def retreive_questions():
             limit = req['limit']
             rows = cur.execute("""SELECT id, title, topics AS 'category', question AS description, difficulty, madeby 
                                   FROM questions 
-                                  ORDER BY id DESC LIMIT %s""",(limit))
+                                  ORDER BY id DESC LIMIT %s""",(limit,))
             if rows > 0:
                 result = cur.fetchall()
             return jsonify(result)
@@ -49,7 +49,7 @@ def insert_new_question():
         constraint = req['constraint']
 
         call = testcases[0]['functionCall']
-        funcname = call[0:call.find('(')]
+        funcname = call.partition('(')[0]
 
         #question
         cur.execute("""INSERT INTO questions(id, title, topics, question, difficulty, madeby)
@@ -57,7 +57,7 @@ def insert_new_question():
         mysql.connection.commit()
         cur.execute("""SELECT MAX(id) as id 
                        FROM questions 
-                       WHERE professorID = %s""",(pid))
+                       WHERE professorID = %s""",(pid,))
         qid = cur.fetchall()[0]['id']
 
         #namecriteria
@@ -66,7 +66,7 @@ def insert_new_question():
         mysql.connection.commit()
         cur.execute("""SELECT MAX(id) as id
                        FROM gradableitems 
-                       WHERE qid = %s""",(qid))
+                       WHERE qid = %s""",(qid,))
         gid = cur.fetchall()[0]['id']
         cur.execute("""INSERT INTO namecriteria(id, gid, fname)
                        VALUES(null, %s, %s)""",(gid, funcname)) 
@@ -78,8 +78,8 @@ def insert_new_question():
                         VALUES (null, %s, %s)""",(qid, "constraints"))
             mysql.connection.commit()
             cur.execute("""SELECT MAX(id) as id
-                        FROM gradableitems 
-                        WHERE qid = %s""",(qid))
+                        FROM gradableitems
+                        WHERE qid = %s""",(qid,))
             gid = cur.fetchall()[0]['id']
             cur.execute("""INSERT INTO constraints(id, gid, ctype)
                         VALUES(null, %s, %s)""",(gid, constraint)) 
@@ -90,12 +90,12 @@ def insert_new_question():
             caseI = case['functionCall']
             caseO = case['expectedOutput']
             output_type = case['type']
-            cur.execute("""INSERT INTO gradableitems(id, qid, criteriatable, maxscore)
-                           VALUES (null, %s, %s, %s)""",(qid, "testcase", 0))
+            cur.execute("""INSERT INTO gradableitems(id, qid, criteriatable)
+                           VALUES (null, %s, %s)""",(qid, "testcase"))
             mysql.connection.commit()
             cur.execute("""SELECT MAX(id) as id
                            FROM gradableitems 
-                           WHERE qid = %s""",(qid))
+                           WHERE qid = %s""",(qid,))
             gid = cur.fetchall()[0]['id']
             cur.execute("""INSERT INTO testcase(id, gid, input, output, outputtype)
                            VALUES(null, %s, %s, %s, %s)""",(gid, caseI, caseO, output_type))
@@ -115,7 +115,7 @@ def retrieve_question_details():
         qid = req['questionID']
         rows = cur.execute("""SELECT * 
                               FROM questions 
-                              WHERE id = %s""",(qid))
+                              WHERE id = %s""",(qid,))
         if rows > 0:
             res = cur.fetchall()[0]
             return jsonify(res), 200
@@ -132,7 +132,7 @@ def retrieve_test_cases():
     qid = request.args.get("questionID")
     rows = cur.execute("""SELECT id
                           FROM gradableitems
-                          WHERE qid = %s AND criteriatable = 'testcase'""",(qid))
+                          WHERE qid = %s AND criteriatable = %s""",(qid,'testcase'))
 
     if rows > 0:
         cases = list()
@@ -140,7 +140,8 @@ def retrieve_test_cases():
         for row in rows:
             gid = row['id']
             rows = cur.execute("""SELECT input AS functionCall, output AS expectedOutput, outputtype AS type 
-                                  FROM testcase WHERE gid = %s""",(gid))
+                                  FROM testcase 
+                                  WHERE gid = %s""",(gid,))
             cases.append(cur.fetchall()[0])
         return jsonify(cases), 200
     else:
@@ -156,14 +157,14 @@ def retrieve_exam_questions():
         req = request.json
         eid = req['examID']
         rows = cur.execute("""SELECT name, open
-                              FROM exams 
-                              WHERE id = %s""",(eid))
+                              FROM exams
+                              WHERE id = %s""",(eid,))
         result = cur.fetchall()[0]
         examname = result['name']
         examstatus = result['open']
         rows = cur.execute("""SELECT eq.id as eqid, q.id AS qid, eq.points as points, q.title AS title, q.question AS question, q.difficulty AS difficulty 
-                              FROM questions AS q, examquestions AS eq 
-                              WHERE  eq.eid = %s && eq.qid = q.id""",(eid))
+                              FROM questions AS q, examquestions AS eq
+                              WHERE  eq.eid = %s && eq.qid = q.id""",(eid,))
         
         if rows > 0:
             result = cur.fetchall()
