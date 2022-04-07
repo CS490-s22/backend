@@ -270,7 +270,7 @@ def retrieve_exam_attempts_for_grading():
                             rows = cur.execute("""SELECT input, output, outputtype 
                                                   FROM testcase 
                                                   WHERE gid = %s""",(gid,))
-                            testcase = cur.fetchall()
+                            testcase = cur.fetchall()[0]
                             glist.append({'gradableID': gid, 'maxgrade': maxgrade, 'type': gtype, 'case': {'functionCall': testcase['input'], 'expectedOutput': testcase['output'], 'type': testcase['outputtype']}})
 
                     questions.append({'examquestionID':eqid, 'points':points, 'gradables':glist, 'response': ans.decode("utf-8")})
