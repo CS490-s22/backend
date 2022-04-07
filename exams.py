@@ -264,7 +264,7 @@ def retrieve_exam_attempts_for_grading():
                                            FROM constraints
                                            WHERE gid = %s""", (gid,))
                             ctype = cur.fetchall()[0]['ctype']
-                            glist.append({'gradableID': gid, 'type': gtype, 'Constraint':ctype})
+                            glist.append({'gradableID': gid, 'type': gtype, 'constraint':ctype})
                         else:
                             gtype = "testcase"
                             rows = cur.execute("""SELECT input, output, outputtype 
