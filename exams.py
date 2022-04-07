@@ -273,7 +273,7 @@ def retrieve_exam_attempts_for_grading():
                             testcase = cur.fetchall()[0]
                             glist.append({'gradableID': gid, 'maxgrade': maxgrade, 'type': gtype, 'case': {'functionCall': testcase['input'], 'expectedOutput': testcase['output'], 'type': testcase['outputtype']}})
 
-                    questions.append({'examquestionID':eqid, 'points':points, 'gradables':glist, 'response': ans.decode("utf-8")})
+                    questions.append({'examquestionID':eqid, 'points':points, 'gradableitems':glist, 'response': ans.decode("utf-8")})
                 attempts.append({"studentID": sid, "examattemptID": eaid, "questions":questions})
             return jsonify(attempts), 200
         else:
