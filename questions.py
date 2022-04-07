@@ -57,7 +57,7 @@ def insert_new_question():
         mysql.connection.commit()
         cur.execute("""SELECT MAX(id) as id 
                        FROM questions 
-                       WHERE professorID = %s""",(pid,))
+                       WHERE madeby = %s""",(pid,))
         qid = cur.fetchall()[0]['id']
 
         #namecriteria

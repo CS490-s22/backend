@@ -36,17 +36,19 @@ def create_new_exam():
             qid = q['questionID']
             points = q['points']
             cur.execute("""INSERT INTO examquestions(id, eid, qid, points)
-                           VALUES(null, {}, {}, {})""",(eid, qid, points))
+                           VALUES(null, %s, %s, %s)""",(eid, qid, points))
             mysql.connection.commit()
             cur.execute("""SELECT MAX(id) AS id 
                            FROM examquestions
                            WHERE eid = %s AND qid = %s""", (eid, qid))
             eqid = cur.fetchall()[0]['id']
             cur.execute("""SELECT id, criteriatable AS ct
-                           FROM gradabaleitems
+                           FROM gradableitems
                            WHERE qid = %s""",(qid,))
             rows = cur.fetchall()
             ntcc = 0
+            plfc = 0
+            noc = 0
             for gradeable in rows:
                 gid = gradeable['id']
                 if gradeable['ct'] == 'namecriteria':
@@ -56,12 +58,16 @@ def create_new_exam():
                     gmaxgrade = 0.1 * points
                     ntcc+=1
                 else:
-                    gmaxgrade =  round(((1.0 - (0.1 * ntcc)) * points) / (len(rows)-ntcc),2)
                     if ntcc != 0:
-                        leftover = 1.0 - round(gmaxgrade * 3, 2)
+                        plfc = ((1.0 - (0.1 * ntcc)) * points)
+                        noc = (len(rows)-ntcc)
+                        gmaxgrade =  round(plfc/noc,2)
+                        leftover = plfc - round(gmaxgrade * noc, 2)
                         gmaxgrade += leftover
                         ntcc = 0
-                
+                    else:
+                        gmaxgrade =  round(plfc/noc,2)
+                    
                 cur.execute("""INSERT INTO examgradableitems(id, eqid, gid, points)
                                VALUES(null, %s, %s, %s)""",(eqid, gid, gmaxgrade))
                 mysql.connection.commit()
