@@ -251,14 +251,14 @@ def retrieve_exam_attempts_for_grading():
                                            FROM namecriteria
                                            WHERE gid = %s""",(gid,))
                             name = cur.fetchall()[0]['fname']
-                            glist.append({'gradableID': gid, 'type': gtype, 'name': name})
+                            glist.append({'gradableID': gid, 'maxgrade': maxgrade, 'type': gtype, 'name': name})
                         elif ct == 'constraints':
                             gtype = "constraint"
                             cur.execute("""SELECT ctype
                                            FROM constraints
                                            WHERE gid = %s""", (gid,))
                             ctype = cur.fetchall()[0]['ctype']
-                            glist.append({'gradableID': gid, 'type': gtype, 'Constraint':ctype})
+                            glist.append({'gradableID': gid, 'maxgrade': maxgrade, 'type': gtype, 'Constraint':ctype})
                         else:
                             gtype = "testcase"
                             rows = cur.execute("""SELECT input, output, outputtype 
