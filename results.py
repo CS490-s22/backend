@@ -28,7 +28,7 @@ def score_exams_attempts():
                 qscore = question['questionscore']
                 gradables = question['gradables']
                 cur.execute("""INSERT INTO questionresults(id, rid, eqid, score, remark) 
-                               VALUES (null, %s, %s)""",(rid, eqid, qscore, ""))
+                               VALUES (null, %s, %s, %s, %s)""",(rid, eqid, qscore, ""))
                 mysql.connection.commit()
                 cur.execute("""SELECT MAX(id) as id
                                FROM questionresults
