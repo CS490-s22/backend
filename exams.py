@@ -247,9 +247,9 @@ def retrieve_exam_attempts_for_grading():
                     for g in gradables:
                         ct = g['ct']
                         gid = g['id']
-                        cur.execute("""SELECT fname 
-                                           FROM examgradableitems
-                                           WHERE eqid = %s AND gid = %s""",(eqid, gid))
+                        cur.execute("""SELECT points 
+                                        FROM examgradableitems
+                                        WHERE eqid = %s AND gid = %s""",(eqid, gid))
                         maxgrade = cur.fetchall()[0]['points']
                         if ct == 'namecriteria':
                             gtype = 'name'
