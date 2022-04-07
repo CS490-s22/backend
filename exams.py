@@ -36,17 +36,19 @@ def create_new_exam():
             qid = q['questionID']
             points = q['points']
             cur.execute("""INSERT INTO examquestions(id, eid, qid, points)
-                           VALUES(null, {}, {}, {})""",(eid, qid, points))
+                           VALUES(null, %s, %s, %s)""",(eid, qid, points))
             mysql.connection.commit()
             cur.execute("""SELECT MAX(id) AS id 
                            FROM examquestions
                            WHERE eid = %s AND qid = %s""", (eid, qid))
             eqid = cur.fetchall()[0]['id']
             cur.execute("""SELECT id, criteriatable AS ct
-                           FROM gradabaleitems
+                           FROM gradableitems
                            WHERE qid = %s""",(qid,))
             rows = cur.fetchall()
             ntcc = 0
+            plfc = 0
+            noc = 0
             for gradeable in rows:
                 gid = gradeable['id']
                 if gradeable['ct'] == 'namecriteria':
@@ -56,12 +58,16 @@ def create_new_exam():
                     gmaxgrade = 0.1 * points
                     ntcc+=1
                 else:
-                    gmaxgrade =  round(((1.0 - (0.1 * ntcc)) * points) / (len(rows)-ntcc),2)
                     if ntcc != 0:
-                        leftover = 1.0 - round(gmaxgrade * 3, 2)
+                        plfc = ((1.0 - (0.1 * ntcc)) * points)
+                        noc = (len(rows)-ntcc)
+                        gmaxgrade =  round(plfc/noc,2)
+                        leftover = plfc - round(gmaxgrade * noc, 2)
                         gmaxgrade += leftover
                         ntcc = 0
-                
+                    else:
+                        gmaxgrade =  round(plfc/noc,2)
+                    
                 cur.execute("""INSERT INTO examgradableitems(id, eqid, gid, points)
                                VALUES(null, %s, %s, %s)""",(eqid, gid, gmaxgrade))
                 mysql.connection.commit()
@@ -241,33 +247,35 @@ def retrieve_exam_attempts_for_grading():
                     for g in gradables:
                         ct = g['ct']
                         gid = g['id']
-                        cur.execute("""SELECT fname 
-                                           FROM examgradableitems
-                                           WHERE eqid = %s AND gid = %s""",(eqid, gid))
-                        maxgrade = cur.fetchall()[0]['points']
+                        cur.execute("""SELECT id, points 
+                                        FROM examgradableitems
+                                        WHERE eqid = %s AND gid = %s""",(eqid, gid))
+                        egitem = cur.fetchall()[0]
+                        maxgrade = egitem['points']
+                        egid = egitem['id']
                         if ct == 'namecriteria':
                             gtype = 'name'
                             cur.execute("""SELECT fname 
                                            FROM namecriteria
                                            WHERE gid = %s""",(gid,))
                             name = cur.fetchall()[0]['fname']
-                            glist.append({'gradableID': gid, 'maxgrade': maxgrade, 'type': gtype, 'name': name})
+                            glist.append({'examgradableID': egid, 'maxgrade': maxgrade, 'type': gtype, 'name': name})
                         elif ct == 'constraints':
                             gtype = "constraint"
                             cur.execute("""SELECT ctype
                                            FROM constraints
                                            WHERE gid = %s""", (gid,))
                             ctype = cur.fetchall()[0]['ctype']
-                            glist.append({'gradableID': gid, 'maxgrade': maxgrade, 'type': gtype, 'Constraint':ctype})
+                            glist.append({'examgradableID': egid, 'maxgrade': maxgrade, 'type': gtype, 'constraint':ctype})
                         else:
                             gtype = "testcase"
                             rows = cur.execute("""SELECT input, output, outputtype 
                                                   FROM testcase 
                                                   WHERE gid = %s""",(gid,))
-                            testcase = cur.fetchall()
-                            glist.append({'gradableID': gid, 'maxgrade': maxgrade, 'type': gtype, 'case': {'functionCall': testcase['input'], 'expectedOutput': testcase['output'], 'type': testcase['outputtype']}})
+                            testcase = cur.fetchall()[0]
+                            glist.append({'examgradableID': egid, 'maxgrade': maxgrade, 'type': gtype, 'case': {'functionCall': testcase['input'], 'expectedOutput': testcase['output'], 'type': testcase['outputtype']}})
 
-                    questions.append({'examquestionID':eqid, 'points':points, 'gradables':glist, 'response': ans.decode("utf-8")})
+                    questions.append({'examquestionID':eqid, 'points':points, 'gradableitems':glist, 'response': ans.decode("utf-8")})
                 attempts.append({"studentID": sid, "examattemptID": eaid, "questions":questions})
             return jsonify(attempts), 200
         else:
