@@ -247,10 +247,12 @@ def retrieve_exam_attempts_for_grading():
                     for g in gradables:
                         ct = g['ct']
                         gid = g['id']
-                        cur.execute("""SELECT points 
+                        cur.execute("""SELECT id, points 
                                         FROM examgradableitems
                                         WHERE eqid = %s AND gid = %s""",(eqid, gid))
-                        maxgrade = cur.fetchall()[0]['points']
+                        egitem = cur.fetchall()[0]
+                        maxgrade = egitem['points']
+                        egid = egitem['id']
                         if ct == 'namecriteria':
                             gtype = 'name'
                             cur.execute("""SELECT fname 
@@ -271,7 +273,7 @@ def retrieve_exam_attempts_for_grading():
                                                   FROM testcase 
                                                   WHERE gid = %s""",(gid,))
                             testcase = cur.fetchall()[0]
-                            glist.append({'gradableID': gid, 'maxgrade': maxgrade, 'type': gtype, 'case': {'functionCall': testcase['input'], 'expectedOutput': testcase['output'], 'type': testcase['outputtype']}})
+                            glist.append({'examgradableID': egid, 'maxgrade': maxgrade, 'type': gtype, 'case': {'functionCall': testcase['input'], 'expectedOutput': testcase['output'], 'type': testcase['outputtype']}})
 
                     questions.append({'examquestionID':eqid, 'points':points, 'gradableitems':glist, 'response': ans.decode("utf-8")})
                 attempts.append({"studentID": sid, "examattemptID": eaid, "questions":questions})

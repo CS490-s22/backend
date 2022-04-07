@@ -36,7 +36,7 @@ def score_exams_attempts():
                 qrid = cur.fetchall()[0]['id']
                 for g in gradables:    
                     cur.execute("""INSERT INTO gradableresults(id, qrid, egid, score, expected, received) 
-                                VALUES (null, %s, %s, %s, %s, %s)""",(qrid, eqid, g['score'], g['expected'], g['received']))
+                                VALUES (null, %s, %s, %s, %s, %s)""",(qrid, g['examgradableID'], g['score'], g['expected'], g['received']))
                     mysql.connection.commit()
             resultIDs.append({'examattemptID':eaid, 'resultID':rid})
             cur.execute("""UPDATE examattempts 
