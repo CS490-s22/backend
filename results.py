@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request, current_app as app
 from database import mysql
+import math
 
 results = Blueprint("results",__name__)
 
@@ -34,7 +35,7 @@ def score_exams_attempts():
                                FROM questionresults
                                WHERE rid = %s AND eqid = %s""", (rid, eqid))
                 qrid = cur.fetchall()[0]['id']
-                for g in gradables:    
+                for g in gradables:   
                     cur.execute("""INSERT INTO gradableresults(id, qrid, egid, score, expected, received) 
                                 VALUES (null, %s, %s, %s, %s, %s)""",(qrid, g['examgradableID'], g['score'], g['expected'], g['received']))
                     mysql.connection.commit()
@@ -113,28 +114,25 @@ def retrieve_exam_results():
                                    FROM examattemptanswers 
                                    WHERE eaid = %s AND eqid = %s""",(eaid, eqid))
                     ans = cur.fetchall()[0]['answer']
-                    cur.execute("""SELECT id AS qrid, score 
+                    cur.execute("""SELECT id AS qrid, score, remark 
                                    FROM questionresults 
                                    WHERE rid = %s AND eqid = %s""",(rid, eqid))
                     qresult = cur.fetchall()[0]
                     qscore = qresult['score']
+                    comment = qresult['remark']
                     qrid = qresult['qrid']
                     cur.execute("""SELECT id AS grid, qrid, egid, score, expected, received
                                    FROM gradableresults
                                    WHERE qrid = %s""", (qrid,))
                     gresults = cur.fetchall()
                     gradables = list()
-                    pleft = 1.00
                     for gr in gresults:
                         cur.execute("""SELECT points, gid
                                        FROM examgradableitems
                                        WHERE id = %s""", (gr['egid'],))
                         eg = cur.fetchall()
                         maxgpoints = eg['points']
-                        maxp = round(maxgpoints/maxqpoints, 2)
-                        if pleft < 0.00:
-                            maxp+=pleft
-                        pleft-=maxp
+                        maxp = f"{math.floor(round(maxgpoints/maxqpoints, 2) * (10 ** 2))}%"
                         gid = ['gid']
                         cur.execute("""SELECT criteriatable AS cr
                                        FROM gradableitems
@@ -147,7 +145,7 @@ def retrieve_exam_results():
                         else:
                             cr = "Constraint"
                         gradables.append({'egid':gr['egid'], 'maxgrade':{'points':maxgpoints, 'percentage':maxp}, 'type':cr, 'score':gr['score'], 'expected':gr['expected'], 'received':gr['received']})
-                    questions.append({'examquestionID':eqid, 'title':qtitle, 'questions':qq, 'qscore':qscore, 'maxpoints':maxqpoints, 'response': ans.decode("utf-8")})
+                    questions.append({'examquestionID':eqid, 'title':qtitle, 'questions':qq, 'qscore':qscore, 'comment':comment, 'maxpoints':maxqpoints, 'response': ans.decode("utf-8")})
                 attempts.append({'studentID': sid, 'fname':fname, 'lname':lname, 'examattemptID': eaid, 'resultID':rid, 'score':attemptscore, 'questions':questions})
             return jsonify({'examname':examname,'maxexampoints':maxexamscore,'examattempts':attempts}), 200
         else:
@@ -164,41 +162,57 @@ def retrieve_exam_result():
         eid = req['examID']
         eaid = req['examattemptID']
         rid = req['resultID']
-        rows = cur.execute(f'SELECT id, name, points FROM exams WHERE id={eid}')
+        rows = cur.execute("""SELECT id, name, points 
+                              FROM exams 
+                              WHERE id = %s""", (eid,))
         if rows == 0:
             return jsonify(error="EXAM ID NOT VALID")
         exam = cur.fetchall()[0]
         examname = exam['name']
         maxexamscore = exam['points']
-        rows = cur.execute(f'SELECT sid FROM examattempts WHERE id={eaid}')
+        rows = cur.execute("""SELECT sid 
+                              FROM examattempts 
+                              WHERE id = %s""", (eaid,))
         if rows > 0:
             examattempt = cur.fetchall()[0]
-            rows = cur.execute(f'SELECT id AS eqid, qid, points FROM examquestions WHERE eid={eid}')
-            examquestions= cur.fetchall()
             sid = examattempt['sid']
-            cur.execute(f'SELECT firstname, lastname FROM students WHERE id={sid}')
+            cur.execute("""SELECT firstname, lastname 
+                           FROM students 
+                           WHERE id = %s""", (sid,))
             student = cur.fetchall()[0]
             fname = student['firstname']
             lname = student['lastname']
-            cur.execute(f'SELECT score FROM results WHERE id={rid}')
+            rows = cur.execute("""SELECT id AS eqid, qid, points 
+                                  FROM examquestions 
+                                  WHERE eid = %s""", (eid,))
+            examquestions= cur.fetchall()
+            cur.execute("""SELECT score 
+                           FROM results 
+                           WHERE id = %s""", (rid,))
             result = cur.fetchall()[0]
             attemptscore = result['score']
             questions = list()
             for eq in examquestions:
-                maxpoints = eq['points']
+                maxqpoints = eq['points']
                 qid = eq['qid']
                 eqid = eq['eqid']
-                cur.execute(f'SELECT title, question FROM questions WHERE id={qid}')
+                cur.execute("""SELECT title, question 
+                               FROM questions 
+                               WHERE id = %s""", (qid,))
                 q = cur.fetchall()[0]
                 qtitle = q['title']
                 qq = q['question']
-                cur.execute(f'SELECT answer FROM examattemptanswers WHERE eaid = {eaid} AND eqid={eqid}')
+                cur.execute("""SELECT answer 
+                               FROM examattemptanswers 
+                               WHERE eaid = %s AND eqid = %s""",(eaid, eqid))
                 ans = cur.fetchall()[0]['answer']
-                cur.execute(f'SELECT score, remark FROM questionresults WHERE rid={rid} AND eqid={eqid}')
+                cur.execute("""SELECT score, remark 
+                               FROM questionresults 
+                               WHERE rid = %s AND eqid = %s""", (rid, eqid))
                 qresult = cur.fetchall()[0]
                 qscore = qresult['score']
                 comment = qresult['remark']
-                questions.append({'examquestionID':eqid, 'title':qtitle, 'question':qq, 'qscore':qscore, 'maxpoints':maxpoints, 'response': ans.decode("utf-8"), 'comments':comment})
+                questions.append({'examquestionID':eqid, 'title':qtitle, 'question':qq, 'qscore':qscore, 'maxpoints':maxqpoints, 'response': ans.decode("utf-8"), 'comments':comment})
             attempt = {"studentID": sid, 'fname':fname, 'lname':lname, "examattemptID": eaid, "resultID":rid, 'score':attemptscore, "questions":questions}
             return jsonify({'examname':examname,'maxexampoints':maxexamscore,'examattempt':attempt}), 200
         else:

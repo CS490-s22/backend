@@ -34,7 +34,7 @@ def create_new_exam():
 
         for q in questions:
             qid = q['questionID']
-            points = q['points']
+            points = int(q['points'])
             cur.execute("""INSERT INTO examquestions(id, eid, qid, points)
                            VALUES(null, %s, %s, %s)""",(eid, qid, points))
             mysql.connection.commit()
