@@ -130,9 +130,9 @@ def retrieve_exam_results():
                         cur.execute("""SELECT points, gid
                                        FROM examgradableitems
                                        WHERE id = %s""", (gr['egid'],))
-                        eg = cur.fetchall()
+                        eg = cur.fetchall()[0]
                         maxgpoints = eg['points']
-                        maxp = f"{math.floor(round(maxgpoints/maxqpoints, 2) * (10 ** 2))}%"
+                        maxp = f"{(maxgpoints/maxqpoints, 2) * 100}%"
                         gid = ['gid']
                         cur.execute("""SELECT criteriatable AS cr
                                        FROM gradableitems
@@ -145,7 +145,7 @@ def retrieve_exam_results():
                         else:
                             cr = "Constraint"
                         gradables.append({'egid':gr['egid'], 'maxgrade':{'points':maxgpoints, 'percentage':maxp}, 'type':cr, 'score':gr['score'], 'expected':gr['expected'], 'received':gr['received']})
-                    questions.append({'examquestionID':eqid, 'title':qtitle, 'questions':qq, 'qscore':qscore, 'comment':comment, 'maxpoints':maxqpoints, 'response': ans.decode("utf-8")})
+                    questions.append({'examquestionID':eqid, 'title':qtitle, 'questions':qq, 'qscore':qscore, 'comments':comment, 'maxpoints':maxqpoints, 'response': ans.decode("utf-8")})
                 attempts.append({'studentID': sid, 'fname':fname, 'lname':lname, 'examattemptID': eaid, 'resultID':rid, 'score':attemptscore, 'questions':questions})
             return jsonify({'examname':examname,'maxexampoints':maxexamscore,'examattempts':attempts}), 200
         else:
@@ -206,13 +206,38 @@ def retrieve_exam_result():
                                FROM examattemptanswers 
                                WHERE eaid = %s AND eqid = %s""",(eaid, eqid))
                 ans = cur.fetchall()[0]['answer']
-                cur.execute("""SELECT score, remark 
+                cur.execute("""SELECT id AS qrid, score, remark 
                                FROM questionresults 
                                WHERE rid = %s AND eqid = %s""", (rid, eqid))
                 qresult = cur.fetchall()[0]
                 qscore = qresult['score']
                 comment = qresult['remark']
-                questions.append({'examquestionID':eqid, 'title':qtitle, 'question':qq, 'qscore':qscore, 'maxpoints':maxqpoints, 'response': ans.decode("utf-8"), 'comments':comment})
+                qrid = qresult['qrid']
+                cur.execute("""SELECT id AS grid, qrid, egid, score, expected, received
+                                FROM gradableresults
+                                WHERE qrid = %s""", (qrid,))
+                gresults = cur.fetchall()
+                gradables = list()
+                for gr in gresults:
+                    cur.execute("""SELECT points, gid
+                                    FROM examgradableitems
+                                    WHERE id = %s""", (gr['egid'],))
+                    eg = cur.fetchall()[0]
+                    maxgpoints = eg['points']
+                    maxp = f"{(maxgpoints/maxqpoints, 2) * 100}%"
+                    gid = ['gid']
+                    cur.execute("""SELECT criteriatable AS cr
+                                    FROM gradableitems
+                                    WHERE id = %s""", (gid,))
+                    cr = cur.fetchall()['cr']
+                    if cr == "namecriteria":
+                        cr = "Name"
+                    elif cr == "testcase":
+                        cr = "Testcase"
+                    else:
+                        cr = "Constraint"
+                    gradables.append({'egid':gr['egid'], 'maxgrade':{'points':maxgpoints, 'percentage':maxp}, 'type':cr, 'score':gr['score'], 'expected':gr['expected'], 'received':gr['received']})
+                questions.append({'examquestionID':eqid, 'title':qtitle, 'question':qq, 'gradables':gradables, 'qscore':qscore, 'maxpoints':maxqpoints, 'response': ans.decode("utf-8"), 'comments':comment})
             attempt = {"studentID": sid, 'fname':fname, 'lname':lname, "examattemptID": eaid, "resultID":rid, 'score':attemptscore, "questions":questions}
             return jsonify({'examname':examname,'maxexampoints':maxexamscore,'examattempt':attempt}), 200
         else:

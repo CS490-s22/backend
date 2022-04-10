@@ -30,7 +30,6 @@ def retreive_questions():
                        WHERE (title LIKE %s OR question LIKE %s) {stype} topics = %s {stype} difficulty LIKE %s
                        ORDER BY id DESC 
                        LIMIT %s"""
-            print(query)
             rows = cur.execute(query, conditions)
             if rows > 0:
                 result = cur.fetchall()
