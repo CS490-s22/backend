@@ -1,16 +1,18 @@
 from flask import Blueprint, jsonify, request, current_app as app
 from database import mysql
+from flask_cors import cross_origin
 import logging
 
 questions = Blueprint("questions",__name__)
 
 # Retreive Question Bank or questions based on request method
 @questions.route('/question_bank', methods=['GET','POST'])
+@cross_origin(allow_headers=['Content-Type'])
 def retreive_questions():
     cur = mysql.connection.cursor()
     if request.method == "GET":
         rows = cur.execute("""SELECT id, title, topics AS 'category', question AS description, difficulty, madeby 
-                              FROM questions 
+                              FROM questions
                               ORDER BY id DESC""")
         if rows > 0:
             result = cur.fetchall()
@@ -18,11 +20,18 @@ def retreive_questions():
     elif request.method == "POST":
         content_type = request.headers.get('Content-Type')
         if content_type == "application/json":
+            # TODO: CREATE CONDITIONS TUPLE AND COMPLETE QUERY
             req = request.json
-            limit = req['limit']
-            rows = cur.execute("""SELECT id, title, topics AS 'category', question AS description, difficulty, madeby 
-                                  FROM questions 
-                                  ORDER BY id DESC LIMIT %s""",(limit,))
+            stype = req['stype']
+            conditions = (req['search'], req['search'], req['category'], req['difficulty'],req['limit'])
+            
+            query = f"""SELECT id, title, topics AS 'category', question AS description, difficulty, madeby 
+                       FROM questions 
+                       WHERE (title LIKE '%s' OR question LIKE '%s') {stype} topics = '%s' {stype} difficulty LIKE '%s'
+                       ORDER BY id DESC 
+                       LIMIT %s"""
+            
+            rows = cur.execute(query, conditions)
             if rows > 0:
                 result = cur.fetchall()
             return jsonify(result)

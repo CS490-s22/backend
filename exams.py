@@ -90,9 +90,9 @@ def retreive_exams():
                                       FROM exams AS e, examattempts
                                       WHERE e.id=examattempts.eid AND examattempts.sid = %s AND e.released = 1 AND examattempts.graded = 1""",(sid,))
             else:
-                rows = cur.execute("""SELECT * 
-                                      FROM exams 
-                                      WHERE open = 1 
+                rows = cur.execute("""SELECT *
+                                      FROM exams
+                                      WHERE open = 1
                                       ORDER BY id DESC""")
         else:
             rows = cur.execute("""SELECT exams.*, COUNT(examattempts.eid) AS attempts 
