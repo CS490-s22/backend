@@ -69,7 +69,7 @@ def retrieve_exam_results():
             sid = req['studentID']
             rows = cur.execute("""SELECT id AS eaid, sid 
                                   FROM examattempts 
-                                  WHERE eid={eid} AND sid={sid} ORDER BY id DESC""",(eid, sid))
+                                  WHERE eid = %s AND sid = %s ORDER BY id DESC""",(eid, sid))
         else: 
             rows = cur.execute("""SELECT id AS eaid, sid 
                                   FROM examattempts 
