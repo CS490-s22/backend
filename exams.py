@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, current_app as app
 from flask_cors import cross_origin
 from database import mysql
-import logging, math
+import logging
 
 exams = Blueprint("exams",__name__)
 

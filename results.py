@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, current_app as app
 from database import mysql
-import math
+from flask_cors import cross_origin
 
 results = Blueprint("results",__name__)
 
@@ -132,20 +132,20 @@ def retrieve_exam_results():
                                        WHERE id = %s""", (gr['egid'],))
                         eg = cur.fetchall()[0]
                         maxgpoints = eg['points']
-                        maxp = f"{(maxgpoints/maxqpoints, 2) * 100}%"
+                        maxp = f"{round(maxgpoints/maxqpoints, 2) * 100}%"
                         gid = eg['gid']
                         cur.execute("""SELECT criteriatable AS cr
                                        FROM gradableitems
                                        WHERE id = %s""", (gid,))
-                        cr = cur.fetchall()[0]
+                        cr = cur.fetchall()[0]['cr']
                         if cr == "namecriteria":
                             cr = "Name"
                         elif cr == "testcase":
                             cr = "Testcase"
                         else:
                             cr = "Constraint"
-                        gradables.append({'egid':gr['egid'], 'maxgrade':{'points':maxgpoints, 'percentage':maxp}, 'type':cr, 'score':gr['score'], 'expected':gr['expected'], 'received':gr['received']})
-                    questions.append({'examquestionID':eqid, 'title':qtitle, 'questions':qq, 'qscore':qscore, 'comments':comment, 'maxpoints':maxqpoints, 'response': ans.decode("utf-8")})
+                        gradables.append({'grid':gr['id'], 'egid':gr['egid'], 'maxgrade':{'points':maxgpoints, 'percentage':maxp}, 'type':cr, 'score':gr['score'], 'expected':gr['expected'], 'received':gr['received']})
+                    questions.append({'questionresultID': qrid, 'examquestionID':eqid, 'title':qtitle, 'questions':qq, 'gradables': gradables, 'qscore':qscore, 'comments':comment, 'maxpoints':maxqpoints, 'response': ans.decode("utf-8")})
                 attempts.append({'studentID': sid, 'fname':fname, 'lname':lname, 'examattemptID': eaid, 'resultID':rid, 'score':attemptscore, 'questions':questions})
             return jsonify({'examname':examname,'maxexampoints':maxexamscore,'examattempts':attempts}), 200
         else:
@@ -264,5 +264,40 @@ def edit_result():
         cur.execute(f'UPDATE results SET score={examscore} WHERE id ={rid}')
         mysql.connection.commit()
         return jsonify(resultID=rid), 200
+    else:
+        return jsonify(error="JSON FORMAT REQUIRED"), 400
+
+@results.route('/edit_result_question', methods=['POST'])
+@cross_origin(allow_headers=['Content-Type'])
+def edit_result_question():
+    cur = mysql.connection.cursor()
+    content_type = request.headers.get("Content-Type")
+    if content_type == 'application/json':
+        req = request.json
+        rid = req['resultID']
+        qrid = req['questionresultID']
+        qscore = req['qscore']
+        eascore = req['attemptscore'] - qscore
+        comment = req['comment']
+        gradables = req['gradables']
+        for g in gradables:
+            newscore = g['newscore']
+            qscore = qscore - g['oldscore'] + newscore
+            grid = g['grid']
+            cur.execute("""UPDATE gradableresults
+                           SET score = %s
+                           WHERE id = %s""",(newscore, grid))
+            mysql.connection.commit()
+        
+        cur.execute("""UPDATE questionsresults
+                       SET score = %s, remark = %s
+                       WHERE id = %s""",(qscore, comment, qrid))
+        mysql.connection.commit()
+        eascore +=qscore
+        cur.execute("""UPDATE results 
+                       SET score = %s 
+                       WHERE id = %s""", (eascore, rid))
+        mysql.connection.commoit()
+        return jsonify(resultID=rid, attemptscore=eascore, qusetionscore=qscore), 200
     else:
         return jsonify(error="JSON FORMAT REQUIRED"), 400
