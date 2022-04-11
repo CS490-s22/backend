@@ -7,6 +7,7 @@ exams = Blueprint("exams",__name__)
 
 #Create new exam
 @exams.route('/new_exam',methods=['POST'])
+@cross_origin(allow_headers=['Content-Type'])
 def create_new_exam():
     cur = mysql.connection.cursor()
     if request.method != 'POST':
