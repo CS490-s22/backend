@@ -297,7 +297,7 @@ def edit_result_question():
         cur.execute("""UPDATE results 
                        SET score = %s 
                        WHERE id = %s""", (eascore, rid))
-        mysql.connection.commoit()
+        mysql.connection.commit()
         return jsonify(resultID=rid, newattemptscore=eascore, questionresultID=qrid, newqscore=qscore), 200
     else:
         return jsonify(error="JSON FORMAT REQUIRED"), 400
