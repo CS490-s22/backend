@@ -9,6 +9,7 @@ questions = Blueprint("questions",__name__)
 @questions.route('/question_bank', methods=['GET','POST'])
 @cross_origin(allow_headers=['Content-Type'])
 def retreive_questions():
+    logging.getLogger('flask_cors').level = logging.DEBUG
     cur = mysql.connection.cursor()
     if request.method == "GET":
         rows = cur.execute("""SELECT id, title, topics AS 'category', question AS description, difficulty, madeby 
@@ -16,7 +17,9 @@ def retreive_questions():
                               ORDER BY id DESC""")
         if rows > 0:
             result = cur.fetchall()
-            return jsonify(result)
+        else:
+            result = {"error":"No questions found..."}
+        return jsonify(result)
     elif request.method == "POST":
         content_type = request.headers.get('Content-Type')
         if content_type == "application/json":
