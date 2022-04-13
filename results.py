@@ -229,7 +229,7 @@ def retrieve_exam_result():
                     cur.execute("""SELECT criteriatable AS cr
                                     FROM gradableitems
                                     WHERE id = %s""", (gid,))
-                    cr = cur.fetchall()['cr']
+                    cr = cur.fetchall()[0]['cr']
                     if cr == "namecriteria":
                         cr = "Name"
                     elif cr == "testcase":
