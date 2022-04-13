@@ -20,7 +20,6 @@ def retreive_questions():
     elif request.method == "POST":
         content_type = request.headers.get('Content-Type')
         if content_type == "application/json":
-            # TODO: CREATE CONDITIONS TUPLE AND COMPLETE QUERY
             req = request.json
             stype = req['stype']
             conditions = (req['search'], req['search'], req['category'], req['difficulty'],req['limit'])
@@ -33,6 +32,8 @@ def retreive_questions():
             rows = cur.execute(query, conditions)
             if rows > 0:
                 result = cur.fetchall()
+            else: 
+                result = {"error":"No questions found..."}
             return jsonify(result)
         else:
             return jsonify(error = "Content-Type not supported | Request must be in JSON format"), 400
