@@ -24,7 +24,9 @@ def retreive_questions():
         content_type = request.headers.get('Content-Type')
         if content_type == "application/json":
             req = request.json
-            conditions = (f"%{req['search']}%", f"%req['search']%", req['stype'], f"%req['category']%", req['stype'], f"%req['difficulty']%", req['limit'])
+            search = req["search"]
+            conditions = (req['search'], req['search'], req['stype'], req['category'], req['stype'], req['difficulty'], req['limit'])
+            
                 
             query = """SELECT id, title, topics AS 'category', question AS description, difficulty, madeby 
                        FROM questions 
@@ -32,11 +34,7 @@ def retreive_questions():
                        ORDER BY id DESC
                        LIMIT %s"""
             print(conditions, " ", (query % conditions))
-            rows = cur.execute("""SELECT id, title, topics AS 'category', question AS description, difficulty, madeby 
-                                  FROM questions 
-                                  WHERE (title LIKE %s OR question LIKE %s) %s topics LIKE %s %s difficulty LIKE %s
-                                  ORDER BY id DESC 
-                                  LIMIT %s""", conditions)
+            rows = cur.execute(query, conditions)
             if rows > 0:
                 result = cur.fetchall()
             else: 
