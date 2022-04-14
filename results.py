@@ -224,7 +224,7 @@ def retrieve_exam_result():
                                     WHERE id = %s""", (gr['egid'],))
                     eg = cur.fetchall()[0]
                     maxgpoints = eg['points']
-                    maxp = f"{(maxgpoints/maxqpoints, 2) * 100}%"
+                    maxp = f"{round(maxgpoints/maxqpoints, 2) * 100}%"
                     gid = eg['gid']
                     cur.execute("""SELECT criteriatable AS cr
                                     FROM gradableitems
