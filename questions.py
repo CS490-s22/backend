@@ -27,7 +27,7 @@ def retreive_questions():
             conditions = [req['search'], req['search'], req['stype'], req['category'], req['stype'], req['difficulty'], req['limit']]
             
             for i in range(len(conditions)):
-                conditions[0] = f"%{conditions[0]}%"
+                conditions[i] = f"%{conditions[i]}%"
                 
             query = """SELECT id, title, topics AS 'category', question AS description, difficulty, madeby 
                        FROM questions 
