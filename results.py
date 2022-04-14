@@ -145,9 +145,13 @@ def retrieve_exam_results():
                             cr = "Name"
                         elif cr == "testcase":
                             cr = "Testcase"
+                            cur.execute("""SELECT input 
+                                           FROM testcase
+                                           WHERE gid = %s""",(gid,))
+                            testcase = cur.fetchall()[0]
                         else:
                             cr = "Constraint"
-                        gradables.append({'grid':gr['grid'], 'egid':gr['egid'], 'maxgrade':{'points':maxgpoints, 'percentage':maxp}, 'type':cr, 'score':gr['score'], 'expected':gr['expected'], 'received':gr['received']})
+                        gradables.append({'grid':gr['grid'], 'egid':gr['egid'], 'maxgrade':{'points':maxgpoints, 'percentage':maxp}, 'type':cr, 'score':gr['score'], 'expected':testcase['input'], 'received':gr['received']})
                     questions.append({'questionresultID': qrid, 'examquestionID':eqid, 'title':qtitle, 'questions':qq, 'gradables': gradables, 'qscore':qscore, 'comments':comment, 'maxpoints':maxqpoints, 'response': ans.decode("utf-8")})
                 attempts.append({'studentID': sid, 'fname':fname, 'lname':lname, 'examattemptID': eaid, 'resultID':rid, 'score':attemptscore, 'questions':questions})
             return jsonify({'examname':examname,'maxexampoints':maxexamscore,'examattempts':attempts}), 200
