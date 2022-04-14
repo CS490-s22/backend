@@ -295,7 +295,7 @@ def edit_result_question():
                            WHERE id = %s""",(newscore, grid))
             mysql.connection.commit()
         
-        cur.execute("""UPDATE questionsresults
+        cur.execute("""UPDATE questionresults
                        SET score = %s, remark = %s
                        WHERE id = %s""",(qscore, comment, qrid))
         mysql.connection.commit()
