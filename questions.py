@@ -32,7 +32,11 @@ def retreive_questions():
                        ORDER BY id DESC 
                        LIMIT %s"""
             print(conditions, " ", (query % conditions))
-            rows = cur.execute(query, conditions)
+            rows = cur.execute("""SELECT id, title, topics AS 'category', question AS description, difficulty, madeby 
+                                  FROM questions 
+                                  WHERE (title LIKE %s OR question LIKE %s) %s topics LIKE %s %s difficulty LIKE %s
+                                  ORDER BY id DESC 
+                                  LIMIT %s""", (req['search'], req['search'], req['stype'], req['category'], req['stype'], req['difficulty'], req['limit']))
             if rows > 0:
                 result = cur.fetchall()
             else: 
