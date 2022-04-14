@@ -282,7 +282,7 @@ def edit_result_question():
         req = request.json
         rid = req['resultID']
         qrid = req['questionresultID']
-        qscore = req['maxqscore']
+        qscore = req['qscore']
         eascore = req['attemptscore'] - qscore
         comment = req['comment']
         gradables = req['gradables']
