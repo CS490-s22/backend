@@ -25,17 +25,14 @@ def retreive_questions():
         if content_type == "application/json":
             req = request.json 
             stype = req['stype']
-            
             conditions = (req['search'], req['search'], req['category'], req['difficulty'], req['limit'])
-            
-                
             query = f"""SELECT id, title, topics AS 'category', question AS description, difficulty, madeby 
                        FROM questions 
                        WHERE (title LIKE %s OR question LIKE %s) {stype} topics LIKE %s {stype} difficulty LIKE %s
                        ORDER BY id DESC
                        LIMIT %s"""
-            print(conditions, " ", (query % conditions))
             rows = cur.execute(query, conditions)
+            
             if rows > 0:
                 result = cur.fetchall()
             else: 
