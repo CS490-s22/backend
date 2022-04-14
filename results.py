@@ -59,8 +59,9 @@ def retrieve_exam_results():
         rows = cur.execute("""SELECT id, name, points 
                               FROM exams 
                               WHERE id = %s""",(eid,))
+        print(eid,role)
         if rows == 0:
-            return jsonify(error="EXAM ID NOT VALID")
+            return jsonify(error="EXAM ID NOT VALID"), 400
         exam = cur.fetchall()[0]
         examname = exam['name']
         maxexamscore = exam['points']
