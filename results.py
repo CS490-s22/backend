@@ -242,13 +242,19 @@ def retrieve_exam_result():
                                     FROM gradableitems
                                     WHERE id = %s""", (gid,))
                     cr = cur.fetchall()[0]['cr']
+                    goutput = {'grid':gr['grid'], 'egid':gr['egid'], 'maxgrade':{'points':maxgpoints, 'percentage':maxp}, 'score':gr['score'], 'expected':gr['expected'], 'received':gr['received']}
                     if cr == "namecriteria":
-                        cr = "Name"
+                            goutput['type'] = "Name"
                     elif cr == "testcase":
-                        cr = "Testcase"
+                        goutput['type'] = "Testcase"
+                        cur.execute("""SELECT input 
+                                        FROM testcase
+                                        WHERE gid = %s""",(gid,))
+                        testcase = cur.fetchall()[0]
+                        goutput['functionCall'] = testcase['input']
                     else:
-                        cr = "Constraint"
-                    gradables.append({'egid':gr['egid'], 'maxgrade':{'points':maxgpoints, 'percentage':maxp}, 'type':cr, 'score':gr['score'], 'expected':gr['expected'], 'received':gr['received']})
+                        goutput['type'] = "Constraint"
+                    gradables.append(goutput)
                 questions.append({'examquestionID':eqid, 'title':qtitle, 'question':qq, 'gradables':gradables, 'qscore':qscore, 'maxpoints':maxqpoints, 'response': ans.decode("utf-8"), 'comments':comment})
             attempt = {"studentID": sid, 'fname':fname, 'lname':lname, "examattemptID": eaid, "resultID":rid, 'score':attemptscore, "questions":questions}
             return jsonify({'examname':examname,'maxexampoints':maxexamscore,'examattempt':attempt}), 200
