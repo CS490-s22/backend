@@ -282,13 +282,13 @@ def edit_result_question():
         req = request.json
         rid = req['resultID']
         qrid = req['questionresultID']
-        qscore = req['qscore']
-        eascore = req['attemptscore'] - qscore
+        qscore = float(req['qscore'])
+        eascore = float(req['attemptscore']) - qscore
         comment = req['comment']
         gradables = req['gradables']
         for g in gradables:
-            newscore = g['newscore']
-            qscore = qscore - g['oldscore'] + newscore
+            newscore = float(g['newscore'])
+            qscore = qscore - float(g['oldscore']) + newscore
             grid = g['grid']
             cur.execute("""UPDATE gradableresults
                            SET score = %s
