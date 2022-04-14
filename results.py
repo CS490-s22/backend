@@ -141,18 +141,18 @@ def retrieve_exam_results():
                                        FROM gradableitems
                                        WHERE id = %s""", (gid,))
                         cr = cur.fetchall()[0]['cr']
-                        goutput = {'grid':gr['grid'], 'egid':gr['egid'], 'maxgrade':{'points':maxgpoints, 'percentage':maxp}, 'type':cr, 'score':gr['score'], 'expected':gr['expected'], 'received':gr['received']}
+                        goutput = {'grid':gr['grid'], 'egid':gr['egid'], 'maxgrade':{'points':maxgpoints, 'percentage':maxp}, 'score':gr['score'], 'expected':gr['expected'], 'received':gr['received']}
                         if cr == "namecriteria":
-                            cr = "Name"
+                            goutput['type'] = "Name"
                         elif cr == "testcase":
-                            cr = "Testcase"
+                            goutput['type'] = "Testcase"
                             cur.execute("""SELECT input 
                                            FROM testcase
                                            WHERE gid = %s""",(gid,))
                             testcase = cur.fetchall()[0]
                             goutput['functionCall'] = testcase['input']
                         else:
-                            cr = "Constraint"
+                            goutput['type'] = "Constraint"
                         gradables.append(goutput)
                     questions.append({'questionresultID': qrid, 'examquestionID':eqid, 'title':qtitle, 'questions':qq, 'gradables': gradables, 'qscore':qscore, 'comments':comment, 'maxpoints':maxqpoints, 'response': ans.decode("utf-8")})
                 attempts.append({'studentID': sid, 'fname':fname, 'lname':lname, 'examattemptID': eaid, 'resultID':rid, 'score':attemptscore, 'questions':questions})
