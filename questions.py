@@ -24,11 +24,12 @@ def retreive_questions():
         content_type = request.headers.get('Content-Type')
         if content_type == "application/json":
             req = request.json
-            conditions = [req['search'], req['search'], req['stype'], req['category'], req['stype'], req['difficulty']]
+            conditions = [req['search'], req['search'], req['stype'], req['category'], req['stype'], req['difficulty'], req['limit']]
             
-            for i in range(len(conditions)):
-                conditions[i] = f"%{conditions[i]}%"
-            conditions.append(req['limit'])
+            for i in range(0,len(conditions)-1):
+                if i != 2 and i != 4:
+                    conditions[i] = f"%{conditions[i]}%"
+                
             query = """SELECT id, title, topics AS 'category', question AS description, difficulty, madeby 
                        FROM questions 
                        WHERE (title LIKE %s OR question LIKE %s) %s topics LIKE %s %s difficulty LIKE %s
