@@ -29,7 +29,7 @@ def retreive_questions():
             
             query = f"""SELECT id, title, topics AS 'category', question AS description, difficulty, madeby 
                        FROM questions 
-                       WHERE (title LIKE '%s' OR question LIKE '%s') {stype} topics = '%s' {stype} difficulty LIKE '%s'
+                       WHERE (title LIKE %s OR question LIKE %s) {stype} topics = %s {stype} difficulty LIKE %s
                        ORDER BY id DESC 
                        LIMIT %s"""
             print(conditions, " ", (query % conditions))
