@@ -171,19 +171,20 @@ def retrieve_exam_questions():
     if content_type == 'application/json':
         req = request.json
         eid = req['examID']
-        rows = cur.execute("""SELECT name, open
+        rows = cur.execute("""SELECT name, points, open
                               FROM exams
                               WHERE id = %s""",(eid,))
         result = cur.fetchall()[0]
         examname = result['name']
         examstatus = result['open']
+        exammaxscore = result['points']
         rows = cur.execute("""SELECT eq.id as eqid, q.id AS qid, eq.points as points, q.title AS title, q.question AS question, q.difficulty AS difficulty 
                               FROM questions AS q, examquestions AS eq
                               WHERE  eq.eid = %s && eq.qid = q.id""",(eid,))
         
         if rows > 0:
             result = cur.fetchall()
-            return jsonify(name=examname,status=examstatus,questions=result), 200
+            return jsonify(name=examname, maxscore=exammaxscore, status=examstatus, questions=result), 200
         else:
             return jsonify(error="NO QUESTIONS FOUND FOR THIS EXAM"), 400
     else:
