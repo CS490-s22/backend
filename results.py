@@ -150,7 +150,7 @@ def retrieve_exam_results():
                                            FROM testcase
                                            WHERE gid = %s""",(gid,))
                             testcase = cur.fetchall()[0]
-                            goutput['expected'] = testcase['input']
+                            goutput['functionCall'] = testcase['input']
                         else:
                             cr = "Constraint"
                         gradables.append(goutput)
