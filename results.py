@@ -92,11 +92,14 @@ def retrieve_exam_results():
                 student = cur.fetchall()[0]
                 fname = student['firstname']
                 lname = student['lastname']
-                cur.execute("""SELECT id, score
+                rows = cur.execute("""SELECT id, score
                                FROM results
                                WHERE eaid = %s
                                ORDER BY id DESC""",(eaid,))
-                result = cur.fetchall()[0]
+                if rows == 0:
+                    result = {"error":"No grades for this exam yet."}
+                else:
+                    result = cur.fetchall()[0]
                 rid = result['id']
                 attemptscore = result['score']
                 questions = list()
@@ -189,7 +192,10 @@ def retrieve_exam_result():
             cur.execute("""SELECT score 
                            FROM results 
                            WHERE id = %s""", (rid,))
-            result = cur.fetchall()[0]
+            if rows == 0:
+                result = {"error":"No grades for this exam yet."}
+            else:
+                result = cur.fetchall()[0]
             attemptscore = result['score']
             questions = list()
             for eq in examquestions:
