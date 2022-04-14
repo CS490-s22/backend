@@ -34,7 +34,7 @@ def retreive_questions():
             print(conditions, " ", (query % conditions), str(type(req['search'])))
             rows = cur.execute("""SELECT id, title, topics AS 'category', question AS description, difficulty, madeby 
                                   FROM questions 
-                                  WHERE (title LIKE %s OR question LIKE %s) %s topics LIKE %s %s difficulty LIKE %s
+                                  WHERE (title LIKE '%s' OR question LIKE '%s') %s topics LIKE '%s' %s difficulty LIKE '%s'
                                   ORDER BY id DESC 
                                   LIMIT %s""", conditions)
             if rows > 0:
