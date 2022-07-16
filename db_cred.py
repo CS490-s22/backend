@@ -1,1 +1,0 @@
-db = {"mysql_host": "testingdb.c4nmgczzsvxi.us-east-1.rds.amazonaws.com", "mysql_user": "preet", "mysql_pass": "Prince2001", "mysql_db": "testingdb"}
